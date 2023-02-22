@@ -32,9 +32,12 @@ import com.bernardomg.example.netty.proxy.server.channel.EventLoggerChannelHandl
 
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
+import reactor.netty.Connection;
 import reactor.netty.DisposableServer;
 import reactor.netty.NettyInbound;
 import reactor.netty.NettyOutbound;
+import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
 /**
@@ -45,6 +48,8 @@ import reactor.netty.tcp.TcpServer;
  */
 @Slf4j
 public final class ReactorNettyTcpProxyServer implements Server {
+
+    private Connection          clientConnection;
 
     private final ProxyListener listener;
 
@@ -77,7 +82,60 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         listener.onStart();
 
-        server = TcpServer.create()
+        clientConnection = getClientConnection();
+
+        server = getServer();
+
+        log.trace("Started server");
+    }
+
+    @Override
+    public final void stop() {
+        log.trace("Stopping server");
+
+        clientConnection.dispose();
+
+        listener.onStop();
+
+        server.dispose();
+
+        log.trace("Stopped server");
+    }
+
+    private final Connection getClientConnection() {
+        final Connection connection;
+
+        log.trace("Starting client");
+
+        log.debug("Connecting to {}:{}", targetHost, targetPort);
+
+        connection = TcpClient.create()
+            // Logs events
+            .doOnChannelInit((o, c, a) -> log.debug("Channel init"))
+            .doOnConnect(c -> log.debug("Connect"))
+            .doOnConnected(c -> log.debug("Connected"))
+            .doOnDisconnected(c -> log.debug("Disconnected"))
+            .doOnResolve(c -> log.debug("Resolve"))
+            .doOnResolveError((c, t) -> log.debug("Resolve error"))
+            // Sets connection
+            .host(targetHost)
+            .port(targetPort)
+            // Adds handler
+            .handle(this::handleClientResponse)
+            // Connect
+            .connectNow();
+
+        connection.addHandlerLast(new EventLoggerChannelHandler());
+
+        log.trace("Started client");
+
+        return connection;
+    }
+
+    private final DisposableServer getServer() {
+        final DisposableServer srv;
+
+        srv = TcpServer.create()
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Channel init"))
             .doOnConnection(c -> {
@@ -88,26 +146,33 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnBound(c -> log.debug("Channel bound"))
             .doOnUnbound(c -> log.debug("Channel unbound"))
             // Adds request handler
-            .handle(this::handleRequest)
+            .handle(this::handleServerRequest)
             // Binds to port
             .port(port)
             .bindNow();
 
-        server.onDispose()
+        srv.onDispose()
             .block();
 
-        log.trace("Started server");
+        return srv;
     }
 
-    @Override
-    public final void stop() {
-        log.trace("Stopping server");
+    private final Publisher<Void> handleClientResponse(final NettyInbound request, final NettyOutbound response) {
+        log.debug("Setting up response handler");
 
-        listener.onStop();
+        // Receives the response
+        return request.receive()
+            .doOnNext(next -> {
+                // Sends response to listener
+                final String msg;
 
-        server.dispose();
+                log.debug("Handling response");
 
-        log.trace("Stopped server");
+                msg = next.toString(CharsetUtil.UTF_8);
+                listener.onClientReceive(msg);
+            })
+            .doOnError(this::handleError)
+            .then();
     }
 
     /**
@@ -131,14 +196,15 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *            response channel
      * @return a publisher which handles the request
      */
-    private final Publisher<Void> handleRequest(final NettyInbound request, final NettyOutbound response) {
+    private final Publisher<Void> handleServerRequest(final NettyInbound request, final NettyOutbound response) {
         log.debug("Setting up request handler");
 
         // Receives the request and then sends a response
         return request.receive()
             // Handle request
             .doOnNext(next -> {
-                final String message;
+                final String                  message;
+                final Publisher<? extends String> dataStream;
 
                 log.debug("Handling request");
 
@@ -147,6 +213,19 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
                 log.debug("Received request: {}", message);
                 listener.onServerReceive(message);
+
+                // Request data
+                dataStream = Mono.just(message)
+                    .flux()
+                    // Will send the response to the listener
+                    .doOnNext(s -> listener.onServerSend(s));
+
+                // Sends request
+                clientConnection.outbound()
+                    .sendString(dataStream)
+                    .then()
+                    .doOnError(this::handleError)
+                    .subscribe();
             })
             .doOnError(this::handleError)
             .then();
