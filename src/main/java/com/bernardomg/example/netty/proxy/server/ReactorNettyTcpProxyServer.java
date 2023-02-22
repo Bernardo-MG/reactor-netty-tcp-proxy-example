@@ -128,7 +128,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
                 if (clientConnection.isPresent()) {
                     log.debug("Loaded client connection");
                     clientConnection.get()
-                        .addHandlerLast(new EventLoggerChannelHandler());
+                        .addHandlerLast(new EventLoggerChannelHandler("client"));
                 } else {
                     log.debug("Couldn't load client connection");
                 }
@@ -146,7 +146,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
             .doOnConnection(c -> {
                 log.debug("Server connection");
-                c.addHandlerLast(new EventLoggerChannelHandler());
+                c.addHandlerLast(new EventLoggerChannelHandler("server"));
 
                 getClientConnection();
             })

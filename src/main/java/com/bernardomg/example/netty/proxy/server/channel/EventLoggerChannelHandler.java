@@ -24,6 +24,8 @@
 
 package com.bernardomg.example.netty.proxy.server.channel;
 
+import java.util.Objects;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,49 +39,53 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class EventLoggerChannelHandler extends ChannelInboundHandlerAdapter {
 
-    public EventLoggerChannelHandler() {
+    private final String name;
+
+    public EventLoggerChannelHandler(final String nm) {
         super();
+
+        name = Objects.requireNonNull(nm);
     }
 
     @Override
     public final void channelActive(final ChannelHandlerContext ctx) throws Exception {
-        log.debug("Channel active");
+        log.debug("Channel active for {}", name);
         super.channelActive(ctx);
     }
 
     @Override
     public final void channelInactive(final ChannelHandlerContext ctx) throws Exception {
-        log.debug("Channel inactive");
+        log.debug("Channel inactive for {}", name);
         super.channelInactive(ctx);
     }
 
     @Override
     public final void channelRead(final ChannelHandlerContext ctx, final Object msg) throws Exception {
-        log.debug("Channel read");
+        log.debug("Channel read for {}", name);
         super.channelRead(ctx, msg);
     }
 
     @Override
     public final void channelReadComplete(final ChannelHandlerContext ctx) throws Exception {
-        log.debug("Channel read complete");
+        log.debug("Channel read complete for {}", name);
         super.channelReadComplete(ctx);
     }
 
     @Override
     public final void channelRegistered(final ChannelHandlerContext ctx) throws Exception {
-        log.debug("Channel registered");
+        log.debug("Channel registered for {}", name);
         super.channelRegistered(ctx);
     }
 
     @Override
     public final void channelUnregistered(final ChannelHandlerContext ctx) throws Exception {
-        log.debug("Channel unregistered");
+        log.debug("Channel unregistered for {}", name);
         super.channelUnregistered(ctx);
     }
 
     @Override
     public final void userEventTriggered(final ChannelHandlerContext ctx, final Object evt) throws Exception {
-        log.debug("User event triggered");
+        log.debug("User event triggered for {}", name);
         super.userEventTriggered(ctx, evt);
     }
 
