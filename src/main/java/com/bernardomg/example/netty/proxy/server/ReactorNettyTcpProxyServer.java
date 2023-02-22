@@ -26,19 +26,16 @@ package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 
-import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
+import org.reactivestreams.Publisher;
 
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.group.ChannelGroup;
-import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.GlobalEventExecutor;
+import com.bernardomg.example.netty.proxy.server.channel.EventLoggerChannelHandler;
+
+import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
+import reactor.netty.DisposableServer;
+import reactor.netty.NettyInbound;
+import reactor.netty.NettyOutbound;
+import reactor.netty.tcp.TcpServer;
 
 /**
  * Netty based TCP server.
@@ -49,13 +46,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ReactorNettyTcpProxyServer implements Server {
 
-    private EventLoopGroup      bossLoopGroup;
-
-    private ChannelGroup        channelGroup;
-
-    /**
-     * Server listener. Extension hook which allows reacting to the server events.
-     */
     private final ProxyListener listener;
 
     /**
@@ -63,11 +53,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
      */
     private final Integer       port;
 
+    private DisposableServer    server;
+
     private final String        targetHost;
 
     private final Integer       targetPort;
-
-    private EventLoopGroup      workerLoopGroup;
 
     public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
             final ProxyListener lst) {
@@ -81,50 +71,30 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
     @Override
     public final void start() {
-        final ServerBootstrap bootstrap;
-        final ChannelFuture   channelFuture;
-
         log.trace("Starting server");
+
+        log.debug("Binding to port {}", port);
 
         listener.onStart();
 
-        // Initializes groups
-        bossLoopGroup = new NioEventLoopGroup();
-        channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-        workerLoopGroup = new NioEventLoopGroup();
+        server = TcpServer.create()
+            // Logs events
+            .doOnChannelInit((o, c, a) -> log.debug("Channel init"))
+            .doOnConnection(c -> {
+                log.debug("Channel connection");
+                c.addHandlerLast(new EventLoggerChannelHandler());
+            })
+            .doOnBind(c -> log.debug("Channel bind"))
+            .doOnBound(c -> log.debug("Channel bound"))
+            .doOnUnbound(c -> log.debug("Channel unbound"))
+            // Adds request handler
+            .handle(this::handleRequest)
+            // Binds to port
+            .port(port)
+            .bindNow();
 
-        bootstrap = new ServerBootstrap()
-            // Registers groups
-            .group(bossLoopGroup, workerLoopGroup)
-            // Defines channel
-            .channel(NioServerSocketChannel.class)
-            // Configuration
-            .option(ChannelOption.SO_BACKLOG, 1024)
-            .option(ChannelOption.AUTO_CLOSE, true)
-            .option(ChannelOption.SO_REUSEADDR, true)
-            .childOption(ChannelOption.SO_KEEPALIVE, true)
-            .childOption(ChannelOption.TCP_NODELAY, true)
-            // Child handler
-            .childHandler(new MessageListenerChannelInitializer(this::handleRequest));
-
-        try {
-            // Binds to the port
-            log.debug("Binding to port {}", port);
-            channelFuture = bootstrap.bind(port)
-                .sync();
-        } catch (final InterruptedException e) {
-            log.error(e.getLocalizedMessage(), e);
-            stop();
-
-            // Rethrows exception
-            throw new RuntimeException(e);
-        }
-
-        if (channelFuture.isSuccess()) {
-            log.debug("Bound correctly to port {}", port);
-        }
-
-        channelGroup.add(channelFuture.channel());
+        server.onDispose()
+            .block();
 
         log.trace("Started server");
     }
@@ -135,27 +105,51 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         listener.onStop();
 
-        channelGroup.close();
-        bossLoopGroup.shutdownGracefully();
-        workerLoopGroup.shutdownGracefully();
+        server.dispose();
 
         log.trace("Stopped server");
     }
 
     /**
-     * Request event internal listener. Will receive any request sent by the client.
+     * Error handler which sends errors to the log.
      *
-     * @param ctx
-     *            channel context
-     * @param request
-     *            received request body
+     * @param ex
+     *            exception to log
      */
-    private final void handleRequest(final ChannelHandlerContext ctx, final String request) {
-        log.debug("Handling request");
+    private final void handleError(final Throwable ex) {
+        log.error(ex.getLocalizedMessage(), ex);
+    }
 
-        log.debug("Received request: {}", request);
+    /**
+     * Request event listener. Will receive any request sent by the client, and then send back the response.
+     * <p>
+     * Additionally it will send the data from both the request and response to the listener.
+     *
+     * @param request
+     *            request channel
+     * @param response
+     *            response channel
+     * @return a publisher which handles the request
+     */
+    private final Publisher<Void> handleRequest(final NettyInbound request, final NettyOutbound response) {
+        log.debug("Setting up request handler");
 
-        listener.onServerReceive(request);
+        // Receives the request and then sends a response
+        return request.receive()
+            // Handle request
+            .doOnNext(next -> {
+                final String message;
+
+                log.debug("Handling request");
+
+                // Sends the request to the listener
+                message = next.toString(CharsetUtil.UTF_8);
+
+                log.debug("Received request: {}", message);
+                listener.onServerReceive(message);
+            })
+            .doOnError(this::handleError)
+            .then();
     }
 
 }

@@ -119,10 +119,10 @@
       <!-- ============================================== -->
       <bernardomg.cli.manifestVersion>1.0.0</bernardomg.cli.manifestVersion>
       <junit.jupiter.version>5.9.2</junit.jupiter.version>
-      <netty.version>4.1.89.Final</netty.version>
       <log4j.version>2.19.0</log4j.version>
       <lombok.version>1.18.26</lombok.version>
       <picocli.version>4.7.1</picocli.version>
+      <reactor.version>2022.0.3</reactor.version>
       <slf4j.version>2.0.6</slf4j.version>
       <!-- ============================================== -->
       <!-- ============== PLUGINS VERSIONS ============== -->
@@ -144,7 +144,7 @@
       <!-- ============================================== -->
       <!-- ================= EXECUTABLE ================= -->
       <!-- ============================================== -->
-      <main.path>com.bernardomg.example.netty.tcp.Main</main.path>
+      <main.path>com.bernardomg.example.netty.proxy.Main</main.path>
       <exec.file.name>server</exec.file.name>
    </properties>
 
@@ -154,6 +154,14 @@
 
    <dependencyManagement>
       <dependencies>
+        <dependency>
+            <!-- Reactor BOM -->
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-bom</artifactId>
+            <version>${reactor.version}</version> 
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
          <dependency>
             <!-- JUnit BOM -->
             <groupId>org.junit</groupId>
@@ -192,12 +200,17 @@
          <scope>provided</scope>
       </dependency>
       <!-- ============================================== -->
-      <!-- =================== NETTY ==================== -->
+      <!-- ================== Reactor =================== -->
       <!-- ============================================== -->
       <dependency>
-         <groupId>io.netty</groupId>
-         <artifactId>netty-all</artifactId>
-         <version>${netty.version}</version>
+         <!-- Reactor Netty core -->
+         <groupId>io.projectreactor.netty</groupId>
+         <artifactId>reactor-netty-core</artifactId> 
+      </dependency>
+      <dependency>
+         <!-- Reactor Netty HTTP -->
+         <groupId>io.projectreactor.netty</groupId>
+         <artifactId>reactor-netty-http</artifactId>
       </dependency>
       <!-- ============================================== -->
       <!-- ================== LOGGERS =================== -->
