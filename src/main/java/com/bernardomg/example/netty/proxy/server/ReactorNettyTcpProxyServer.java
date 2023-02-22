@@ -50,20 +50,20 @@ import reactor.netty.tcp.TcpServer;
 @Slf4j
 public final class ReactorNettyTcpProxyServer implements Server {
 
-    private Optional<Connection>          clientConnection = Optional.empty();
+    private Optional<Connection> clientConnection = Optional.empty();
 
-    private final ProxyListener listener;
+    private final ProxyListener  listener;
 
     /**
      * Port which the server will listen to.
      */
-    private final Integer       port;
+    private final Integer        port;
 
-    private DisposableServer    server;
+    private DisposableServer     server;
 
-    private final String        targetHost;
+    private final String         targetHost;
 
-    private final Integer       targetPort;
+    private final Integer        targetPort;
 
     public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
             final ProxyListener lst) {
@@ -92,7 +92,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
     public final void stop() {
         log.trace("Stopping server");
 
-        clientConnection.get().dispose();
+        clientConnection.get()
+            .dispose();
 
         listener.onStop();
 
@@ -118,18 +119,21 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .host(targetHost)
             .port(targetPort)
             // Connect
-            .connect().doOnNext(c -> {
+            .connect()
+            .doOnNext(c -> {
                 log.debug("Received connection");
-                
+
                 clientConnection = Optional.ofNullable(c);
 
-                if(clientConnection.isPresent()) {
+                if (clientConnection.isPresent()) {
                     log.debug("Loaded client connection");
-                    clientConnection.get().addHandlerLast(new EventLoggerChannelHandler());
+                    clientConnection.get()
+                        .addHandlerLast(new EventLoggerChannelHandler());
                 } else {
                     log.debug("Couldn't load client connection");
                 }
-            }).subscribe();
+            })
+            .subscribe();
 
         log.trace("Started client");
     }
@@ -205,15 +209,17 @@ public final class ReactorNettyTcpProxyServer implements Server {
                     .flux()
                     // Will send the response to the listener
                     .doOnNext(s -> listener.onClientSend(s));
-                if(clientConnection.isPresent()) {
+                if (clientConnection.isPresent()) {
                     // Sends request
-                    clientConnection.get().outbound()
+                    clientConnection.get()
+                        .outbound()
                         .sendString(dataStream)
                         .then()
                         .doOnError(this::handleError)
                         .subscribe();
 
-                    clientConnection.get().inbound()
+                    clientConnection.get()
+                        .inbound()
                         .receive()
                         .doOnNext(nxt -> {
                             final String msg;
