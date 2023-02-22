@@ -191,7 +191,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         // Receives the request and then sends a response
         return request.receive()
             // Handle request
-            .doOnNext(next -> {
+            .flatMap(next -> {
                 final String                  message;
                 final Publisher<? extends String> dataStream;
 
@@ -208,35 +208,20 @@ public final class ReactorNettyTcpProxyServer implements Server {
                     .flux()
                     // Will send the response to the listener
                     .doOnNext(s -> listener.onClientSend(s));
-                if (clientConnection.isPresent()) {
-                    // Sends request
-                    clientConnection.get()
-                        .outbound()
-                        .sendString(dataStream)
-                        .then()
-                        .doOnError(this::handleError)
-                        .subscribe();
-
-                    clientConnection.get()
-                        .inbound()
+                // Sends request
+                return clientConnection.get().outbound()
+                    .sendString(dataStream)
+                    .then(clientConnection.get().inbound()
                         .receive()
-                        .doOnNext(nxt -> {
+                        .flatMap(nxt -> {
                             final String msg;
 
                             msg = nxt.toString(CharsetUtil.UTF_8);
                             listener.onClientReceive(msg);
 
-                            response.sendString(Mono.just(msg))
-                                .then()
-                                .subscribe()
-                                .dispose();
-                        })
-                        .then()
-                        .doOnError(this::handleError)
-                        .subscribe();
-                } else {
-                    log.error("Missing client connection");
-                }
+                            return response.sendString(Mono.just(msg))
+                                    .then();
+                        }));
             })
             .doOnError(this::handleError)
             .then();
