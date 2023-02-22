@@ -6,19 +6,9 @@
     </properties>
     <body>
         <release version="1.0.0" date="2023-02-16" description="First release">
-            <action dev="bmg" type="update">
+            <action dev="bmg" type="add">
                 First release of the example.
             </action>
-        </release>
-        <release version="1.0.1" date="2023-02-20" description="Split events">
-            <action dev="bmg" type="update">
-                Split send and receive events.
-            </action>
-            <action dev="bmg" type="update">
-                Using generic version provider.
-            </action>
-        </release>
-        <release version="1.1.0" date="2023-02-20" description="">
         </release>
     </body>
 </document>
