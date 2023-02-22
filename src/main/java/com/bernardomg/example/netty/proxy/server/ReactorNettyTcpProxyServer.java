@@ -120,8 +120,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Sets connection
             .host(targetHost)
             .port(targetPort)
-            // Adds handler
-            .handle(this::handleClientResponse)
             // Connect
             .connectNow();
 
@@ -155,24 +153,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .block();
 
         return srv;
-    }
-
-    private final Publisher<Void> handleClientResponse(final NettyInbound request, final NettyOutbound response) {
-        log.debug("Setting up response handler");
-
-        // Receives the response
-        return request.receive()
-            .doOnNext(next -> {
-                // Sends response to listener
-                final String msg;
-
-                log.debug("Handling response");
-
-                msg = next.toString(CharsetUtil.UTF_8);
-                listener.onClientReceive(msg);
-            })
-            .doOnError(this::handleError)
-            .then();
     }
 
     /**
@@ -218,11 +198,24 @@ public final class ReactorNettyTcpProxyServer implements Server {
                 dataStream = Mono.just(message)
                     .flux()
                     // Will send the response to the listener
-                    .doOnNext(s -> listener.onServerSend(s));
-
+                    .doOnNext(s -> listener.onClientSend(s));
                 // Sends request
                 clientConnection.outbound()
                     .sendString(dataStream)
+                    .then()
+                    .doOnError(this::handleError)
+                    .subscribe();
+
+                clientConnection.inbound()
+                    .receive()
+                    .doOnNext(nxt -> {
+                        final String msg;
+
+                        response.send(Mono.just(nxt));
+
+                        msg = nxt.toString(CharsetUtil.UTF_8);
+                        listener.onClientReceive(msg);
+                    })
                     .then()
                     .doOnError(this::handleError)
                     .subscribe();
