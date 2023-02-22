@@ -85,6 +85,9 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         server = getServer();
 
+        server.onDispose()
+            .block();
+
         log.trace("Started server");
     }
 
@@ -121,7 +124,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Connect
             .connect()
             .doOnNext(c -> {
-                log.debug("Received connection");
+                log.debug("Received client connection");
 
                 clientConnection = Optional.ofNullable(c);
 
@@ -133,6 +136,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
                     log.debug("Couldn't load client connection");
                 }
             })
+            .then()
             .subscribe();
 
         log.trace("Started client");
@@ -158,9 +162,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Binds to port
             .port(port)
             .bindNow();
-
-        srv.onDispose()
-            .block();
 
         return srv;
     }
