@@ -182,7 +182,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         // Receives the request and then sends a response
         return request.receive()
             // Handle request
-            .doOnNext(next -> {
+            .flatMap(next -> {
                 final String                  message;
                 final Publisher<? extends String> dataStream;
 
@@ -200,28 +200,23 @@ public final class ReactorNettyTcpProxyServer implements Server {
                     // Will send the response to the listener
                     .doOnNext(s -> listener.onClientSend(s));
                 // Sends request
-                clientConnection.outbound()
+                return clientConnection.outbound()
                     .sendString(dataStream)
-                    .then()
-                    .doOnError(this::handleError)
-                    .subscribe();
+                    .then(clientConnection.inbound()
+                        .receive()
+                        .doOnNext(nxt -> {
+                            final String msg;
 
-                clientConnection.inbound()
-                    .receive()
-                    .doOnNext(nxt -> {
-                        final String msg;
+                            msg = nxt.toString(CharsetUtil.UTF_8);
+                            listener.onClientReceive(msg);
 
-                        msg = nxt.toString(CharsetUtil.UTF_8);
-                        listener.onClientReceive(msg);
-
-                        response.sendString(Mono.just(msg))
-                            .then()
-                            .subscribe()
-                            .dispose();
-                    })
-                    .then()
-                    .doOnError(this::handleError)
-                    .subscribe();
+                            response.sendString(Mono.just(msg))
+                                .then()
+                                .subscribe()
+                                .dispose();
+                        })
+                        .then()
+                        .doOnError(this::handleError));
             })
             .doOnError(this::handleError)
             .then();
