@@ -25,6 +25,7 @@
 package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.reactivestreams.Publisher;
 
@@ -49,7 +50,7 @@ import reactor.netty.tcp.TcpServer;
 @Slf4j
 public final class ReactorNettyTcpProxyServer implements Server {
 
-    private Connection          clientConnection;
+    private Optional<Connection>          clientConnection = Optional.empty();
 
     private final ProxyListener listener;
 
@@ -82,8 +83,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         listener.onStart();
 
-        clientConnection = getClientConnection();
-
         server = getServer();
 
         log.trace("Started server");
@@ -93,7 +92,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
     public final void stop() {
         log.trace("Stopping server");
 
-        clientConnection.dispose();
+        clientConnection.get().dispose();
 
         listener.onStop();
 
@@ -102,14 +101,12 @@ public final class ReactorNettyTcpProxyServer implements Server {
         log.trace("Stopped server");
     }
 
-    private final Connection getClientConnection() {
-        final Connection connection;
-
+    private final void getClientConnection() {
         log.trace("Starting client");
 
-        log.debug("Connecting to {}:{}", targetHost, targetPort);
+        log.debug("Client connecting to {}:{}", targetHost, targetPort);
 
-        connection = TcpClient.create()
+        TcpClient.create()
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Client channel init"))
             .doOnConnect(c -> log.debug("Client connect"))
@@ -121,13 +118,20 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .host(targetHost)
             .port(targetPort)
             // Connect
-            .connectNow();
+            .connect().doOnNext(c -> {
+                log.debug("Received connection");
+                
+                clientConnection = Optional.ofNullable(c);
 
-        connection.addHandlerLast(new EventLoggerChannelHandler());
+                if(clientConnection.isPresent()) {
+                    log.debug("Loaded client connection");
+                    clientConnection.get().addHandlerLast(new EventLoggerChannelHandler());
+                } else {
+                    log.debug("Couldn't load client connection");
+                }
+            }).subscribe();
 
         log.trace("Started client");
-
-        return connection;
     }
 
     private final DisposableServer getServer() {
@@ -139,6 +143,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnConnection(c -> {
                 log.debug("Server connection");
                 c.addHandlerLast(new EventLoggerChannelHandler());
+
+                getClientConnection();
             })
             .doOnBind(c -> log.debug("Server bind"))
             .doOnBound(c -> log.debug("Server bound"))
@@ -199,29 +205,33 @@ public final class ReactorNettyTcpProxyServer implements Server {
                     .flux()
                     // Will send the response to the listener
                     .doOnNext(s -> listener.onClientSend(s));
-                // Sends request
-                clientConnection.outbound()
-                    .sendString(dataStream)
-                    .then()
-                    .doOnError(this::handleError)
-                    .subscribe();
+                if(clientConnection.isPresent()) {
+                    // Sends request
+                    clientConnection.get().outbound()
+                        .sendString(dataStream)
+                        .then()
+                        .doOnError(this::handleError)
+                        .subscribe();
 
-                clientConnection.inbound()
-                    .receive()
-                    .doOnNext(nxt -> {
-                        final String msg;
+                    clientConnection.get().inbound()
+                        .receive()
+                        .doOnNext(nxt -> {
+                            final String msg;
 
-                        msg = nxt.toString(CharsetUtil.UTF_8);
-                        listener.onClientReceive(msg);
+                            msg = nxt.toString(CharsetUtil.UTF_8);
+                            listener.onClientReceive(msg);
 
-                        response.sendString(Mono.just(msg))
-                            .then()
-                            .subscribe()
-                            .dispose();
-                    })
-                    .then()
-                    .doOnError(this::handleError)
-                    .subscribe();
+                            response.sendString(Mono.just(msg))
+                                .then()
+                                .subscribe()
+                                .dispose();
+                        })
+                        .then()
+                        .doOnError(this::handleError)
+                        .subscribe();
+                } else {
+                    log.error("Missing client connection");
+                }
             })
             .doOnError(this::handleError)
             .then();
