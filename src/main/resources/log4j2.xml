@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE xml>
+<Configuration status="WARN" shutdownHook="disable">
+
+   <Properties>
+      <Property name="filename">app.log</Property>
+   </Properties>
+
+   <Appenders>
+      <Console name="console" target="SYSTEM_OUT">
+         <PatternLayout pattern="%-5p | %d{ISO8601} | %c{1.} %M %L | %m%n" />
+      </Console>
+
+      <File name="file" fileName="${filename}">
+         <PatternLayout pattern="%-5p | %d{ISO8601} | %c{1.} %M %L | %m%n" />
+      </File>
+   </Appenders>
+
+   <Loggers>
+      <!-- Application log -->
+      <Logger name="com.bernardomg.example" level="error" additivity="false">
+         <AppenderRef ref="console" />
+      </Logger>
+
+      <!-- Netty -->
+      <Logger name="io.netty" level="error" additivity="false">
+         <AppenderRef ref="console"/>
+      </Logger>
+
+      <Root level="error">
+         <AppenderRef ref="console" />
+      </Root>
+   </Loggers>
+
+</Configuration>

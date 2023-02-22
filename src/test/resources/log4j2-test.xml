@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE xml>
+<Configuration status="WARN" shutdownHook="disable">
+
+   <Properties>
+      <Property name="filename">testing.log</Property>
+   </Properties>
+
+   <Appenders>
+      <Console name="console" target="SYSTEM_OUT">
+         <PatternLayout pattern="%-5p | %d{ISO8601} | %c{1.} %M %L | %m%n" />
+      </Console>
+
+      <File name="file" fileName="${filename}">
+         <PatternLayout pattern="%-5p | %d{ISO8601} | %c{1.} %M %L | %m%n" />
+      </File>
+   </Appenders>
+
+   <Loggers>
+      <!-- Application log -->
+      <Logger name="com.bernardomg.example" level="debug" additivity="false">
+         <AppenderRef ref="file" />
+      </Logger>
+
+      <Root level="error">
+         <AppenderRef ref="console" />
+      </Root>
+   </Loggers>
+
+</Configuration>
