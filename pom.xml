@@ -145,7 +145,7 @@
       <!-- ================= EXECUTABLE ================= -->
       <!-- ============================================== -->
       <main.path>com.bernardomg.example.netty.proxy.Main</main.path>
-      <exec.file.name>server</exec.file.name>
+      <exec.file.name>proxy</exec.file.name>
    </properties>
 
    <!-- ********************************************** -->
