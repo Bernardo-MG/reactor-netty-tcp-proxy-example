@@ -211,10 +211,13 @@ public final class ReactorNettyTcpProxyServer implements Server {
                     .doOnNext(nxt -> {
                         final String msg;
 
-                        response.send(Mono.just(nxt));
-
                         msg = nxt.toString(CharsetUtil.UTF_8);
                         listener.onClientReceive(msg);
+
+                        response.sendString(Mono.just(msg))
+                            .then()
+                            .subscribe()
+                            .dispose();
                     })
                     .then()
                     .doOnError(this::handleError)
