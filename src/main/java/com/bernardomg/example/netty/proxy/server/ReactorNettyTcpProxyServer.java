@@ -111,12 +111,12 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         connection = TcpClient.create()
             // Logs events
-            .doOnChannelInit((o, c, a) -> log.debug("Channel init"))
-            .doOnConnect(c -> log.debug("Connect"))
-            .doOnConnected(c -> log.debug("Connected"))
-            .doOnDisconnected(c -> log.debug("Disconnected"))
-            .doOnResolve(c -> log.debug("Resolve"))
-            .doOnResolveError((c, t) -> log.debug("Resolve error"))
+            .doOnChannelInit((o, c, a) -> log.debug("Client channel init"))
+            .doOnConnect(c -> log.debug("Client connect"))
+            .doOnConnected(c -> log.debug("Client connected"))
+            .doOnDisconnected(c -> log.debug("Client disconnected"))
+            .doOnResolve(c -> log.debug("Client resolve"))
+            .doOnResolveError((c, t) -> log.debug("Client resolve error"))
             // Sets connection
             .host(targetHost)
             .port(targetPort)
@@ -135,14 +135,14 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         srv = TcpServer.create()
             // Logs events
-            .doOnChannelInit((o, c, a) -> log.debug("Channel init"))
+            .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
             .doOnConnection(c -> {
-                log.debug("Channel connection");
+                log.debug("Server connection");
                 c.addHandlerLast(new EventLoggerChannelHandler());
             })
-            .doOnBind(c -> log.debug("Channel bind"))
-            .doOnBound(c -> log.debug("Channel bound"))
-            .doOnUnbound(c -> log.debug("Channel unbound"))
+            .doOnBind(c -> log.debug("Server bind"))
+            .doOnBound(c -> log.debug("Server bound"))
+            .doOnUnbound(c -> log.debug("Server unbound"))
             // Adds request handler
             .handle(this::handleServerRequest)
             // Binds to port
