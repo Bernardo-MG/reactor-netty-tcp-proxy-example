@@ -123,7 +123,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .port(targetPort)
             // Connect
             .connect()
-            .doOnNext(c -> {
+            .subscribe(c -> {
                 log.debug("Received client connection");
 
                 clientConnection = Optional.ofNullable(c);
@@ -135,9 +135,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
                 } else {
                     log.debug("Couldn't load client connection");
                 }
-            })
-            .then()
-            .subscribe();
+            });
 
         log.trace("Started client");
     }
