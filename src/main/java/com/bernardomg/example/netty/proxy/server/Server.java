@@ -22,20 +22,24 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.tcp;
+package com.bernardomg.example.netty.proxy.server;
 
-import com.bernardomg.example.netty.tcp.cli.TcpServerMenu;
+/**
+ * Generic server. Supports starting and stopping it.
+ *
+ * @author Bernardo Mart&iacute;nez Garrido
+ *
+ */
+public interface Server {
 
-import picocli.CommandLine;
+    /**
+     * Starts the server.
+     */
+    public void start();
 
-public class Main {
-
-    public static void main(final String[] args) {
-        new CommandLine(new TcpServerMenu()).execute(args);
-    }
-
-    public Main() {
-        super();
-    }
+    /**
+     * Stops the server.
+     */
+    public void stop();
 
 }

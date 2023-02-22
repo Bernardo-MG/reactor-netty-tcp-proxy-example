@@ -22,16 +22,16 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.tcp.cli.command;
+package com.bernardomg.example.netty.proxy.cli.command;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
-import com.bernardomg.example.netty.tcp.cli.CliWriterProxyListener;
-import com.bernardomg.example.netty.tcp.cli.version.ManifestVersionProvider;
-import com.bernardomg.example.netty.tcp.server.ProxyListener;
-import com.bernardomg.example.netty.tcp.server.ReactorNettyTcpProxyServer;
-import com.bernardomg.example.netty.tcp.server.Server;
+import com.bernardomg.example.netty.proxy.cli.CliWriterProxyListener;
+import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
+import com.bernardomg.example.netty.proxy.server.ProxyListener;
+import com.bernardomg.example.netty.proxy.server.ReactorNettyTcpProxyServer;
+import com.bernardomg.example.netty.proxy.server.Server;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;

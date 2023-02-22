@@ -22,24 +22,46 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.tcp.server;
+package com.bernardomg.example.netty.proxy.server.channel;
+
+import java.util.Objects;
+import java.util.function.BiConsumer;
+
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Generic server. Supports starting and stopping it.
+ * Message listener channel handler. Will send any message to the contained listener.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-public interface Server {
+@Slf4j
+public final class MessageListenerChannelHandler extends SimpleChannelInboundHandler<String> {
 
     /**
-     * Starts the server.
+     * Channel listener. This will receive any message from the channel.
      */
-    public void start();
+    private final BiConsumer<ChannelHandlerContext, String> listener;
 
     /**
-     * Stops the server.
+     * Constructs a channel handler which will send any message to the listener.
+     *
+     * @param lstn
+     *            listener to watch for channel messages
      */
-    public void stop();
+    public MessageListenerChannelHandler(final BiConsumer<ChannelHandlerContext, String> lstn) {
+        super();
+
+        listener = Objects.requireNonNull(lstn);
+    }
+
+    @Override
+    public final void channelRead0(final ChannelHandlerContext ctx, final String message) throws Exception {
+        log.debug("Received message {}", message);
+
+        listener.accept(ctx, message);
+    }
 
 }

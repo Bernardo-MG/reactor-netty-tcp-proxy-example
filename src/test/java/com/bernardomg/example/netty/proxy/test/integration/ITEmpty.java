@@ -21,8 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-/**
- * Project root package. Contains the executable class.
- */
 
-package com.bernardomg.example.netty.tcp;
+package com.bernardomg.example.netty.proxy.test.integration;
+
+import org.junit.jupiter.api.Test;
+
+public final class ITEmpty {
+
+    /**
+     * Default constructor.
+     */
+    public ITEmpty() {
+        super();
+    }
+
+    @Test
+    public final void empty() {}
+
+}

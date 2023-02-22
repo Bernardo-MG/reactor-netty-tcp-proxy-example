@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.tcp.server;
+package com.bernardomg.example.netty.proxy.server;
 
 /**
  * Transaction listener. Allows reacting to the events of a message transaction.
@@ -30,7 +30,7 @@ package com.bernardomg.example.netty.tcp.server;
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-public interface TransactionListener {
+public interface ProxyListener {
 
     /**
      * Reacts to a message being received.
@@ -38,7 +38,7 @@ public interface TransactionListener {
      * @param message
      *            message received
      */
-    public void onReceive(final String message);
+    public void onClientReceive(final String message);
 
     /**
      * Reacts to a message being sent.
@@ -46,7 +46,23 @@ public interface TransactionListener {
      * @param message
      *            message sent
      */
-    public void onSend(final String message);
+    public void onClientSend(final String message);
+
+    /**
+     * Reacts to a message being received.
+     *
+     * @param message
+     *            message received
+     */
+    public void onServerReceive(final String message);
+
+    /**
+     * Reacts to a message being sent.
+     *
+     * @param message
+     *            message sent
+     */
+    public void onServerSend(final String message);
 
     /**
      * Reacts to the start event.

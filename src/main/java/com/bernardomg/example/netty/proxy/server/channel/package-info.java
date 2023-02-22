@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 /**
- * CLI commands for showing the version.
+ * Channel components.
  */
 
-package com.bernardomg.example.netty.tcp.cli.version;
+package com.bernardomg.example.netty.proxy.server.channel;

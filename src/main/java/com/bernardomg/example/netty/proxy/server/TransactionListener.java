@@ -22,20 +22,40 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.tcp.test.integration;
+package com.bernardomg.example.netty.proxy.server;
 
-import org.junit.jupiter.api.Test;
-
-public final class ITEmpty {
+/**
+ * Transaction listener. Allows reacting to the events of a message transaction.
+ *
+ * @author Bernardo Mart&iacute;nez Garrido
+ *
+ */
+public interface TransactionListener {
 
     /**
-     * Default constructor.
+     * Reacts to a message being received.
+     *
+     * @param message
+     *            message received
      */
-    public ITEmpty() {
-        super();
-    }
+    public void onReceive(final String message);
 
-    @Test
-    public final void empty() {}
+    /**
+     * Reacts to a message being sent.
+     *
+     * @param message
+     *            message sent
+     */
+    public void onSend(final String message);
+
+    /**
+     * Reacts to the start event.
+     */
+    public void onStart();
+
+    /**
+     * Reacts to the stop event.
+     */
+    public void onStop();
 
 }

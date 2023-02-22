@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.tcp.server;
+package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 
-import com.bernardomg.example.netty.tcp.server.channel.MessageListenerChannelInitializer;
+import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;

@@ -21,8 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-/**
- * CLI.
- */
 
-package com.bernardomg.example.netty.tcp.cli;
+package com.bernardomg.example.netty.proxy.cli;
+
+import com.bernardomg.example.netty.proxy.cli.command.StartTcpProxyCommand;
+import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
+
+import picocli.CommandLine.Command;
+
+/**
+ * TCP server menu.
+ *
+ * @author Bernardo Mart&iacute;nez Garrido
+ *
+ */
+@Command(description = "TCP server", subcommands = { StartTcpProxyCommand.class }, mixinStandardHelpOptions = true,
+        versionProvider = ManifestVersionProvider.class)
+public class TcpServerMenu {
+
+    /**
+     * Default constructor.
+     */
+    public TcpServerMenu() {
+        super();
+    }
+
+}

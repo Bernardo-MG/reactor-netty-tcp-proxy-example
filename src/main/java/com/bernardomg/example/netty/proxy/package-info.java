@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 /**
- * Server classes.
+ * Project root package. Contains the executable class.
  */
 
-package com.bernardomg.example.netty.tcp.server;
+package com.bernardomg.example.netty.proxy;

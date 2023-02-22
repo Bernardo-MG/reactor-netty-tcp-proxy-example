@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.tcp.cli;
+package com.bernardomg.example.netty.proxy.cli;
 
 import java.io.PrintWriter;
 import java.util.Objects;
 
-import com.bernardomg.example.netty.tcp.server.ProxyListener;
+import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 /**
  * Proxy listener which will write the context of each step into the CLI console.
