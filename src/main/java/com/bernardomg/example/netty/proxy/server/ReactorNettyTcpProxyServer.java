@@ -206,6 +206,23 @@ public final class ReactorNettyTcpProxyServer implements Server {
                                 .then();
                         }));
             })
+            // Cancel handler
+            .doOnCancel(() -> {
+                log.debug("Cancelled request. Sends back proxied response");
+                clientConnection.get()
+                    .inbound()
+                    .receive()
+                    .flatMap(nxt -> {
+                        final String msg;
+
+                        msg = nxt.toString(CharsetUtil.UTF_8);
+                        listener.onClientReceive(msg);
+
+                        return response.sendString(Mono.just(msg))
+                            .then();
+                    });
+            })
+            // Error handler
             .doOnError(this::handleError)
             .then());
     }
