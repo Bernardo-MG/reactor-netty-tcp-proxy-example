@@ -105,12 +105,12 @@ public final class ReactorNettyTcpProxyServer implements Server {
         log.trace("Stopped server");
     }
 
-    private final void getClientConnection() {
+    private final Mono<? extends Connection> getClient() {
         log.trace("Starting client");
 
         log.debug("Client connecting to {}:{}", targetHost, targetPort);
 
-        TcpClient.create()
+        return TcpClient.create()
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Client channel init"))
             .doOnConnect(c -> log.debug("Client connect"))
@@ -121,36 +121,20 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Sets connection
             .host(targetHost)
             .port(targetPort)
-            // Connect
             .connect()
-            .subscribe(c -> {
+            .doOnNext(c -> {
                 log.debug("Received client connection");
-
                 clientConnection = Optional.ofNullable(c);
-
-                if (clientConnection.isPresent()) {
-                    log.debug("Loaded client connection");
-                    clientConnection.get()
-                        .addHandlerLast(new MessageListenerChannelInitializer("client"));
-                } else {
-                    log.debug("Couldn't load client connection");
-                }
             });
-
-        log.trace("Started client");
     }
 
     private final DisposableServer getServer() {
-        final DisposableServer srv;
-
-        srv = TcpServer.create()
+        return TcpServer.create()
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
             .doOnConnection(c -> {
                 log.debug("Server connection");
                 c.addHandlerLast(new MessageListenerChannelInitializer("server"));
-
-                getClientConnection();
             })
             .doOnBind(c -> log.debug("Server bind"))
             .doOnBound(c -> log.debug("Server bound"))
@@ -160,8 +144,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Binds to port
             .port(port)
             .bindNow();
-
-        return srv;
     }
 
     /**
@@ -189,7 +171,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         log.debug("Setting up request handler");
 
         // Receives the request and then sends a response
-        return request.receive()
+        return getClient().then(request.receive()
             // Handle request
             .flatMap(next -> {
                 final String                  message;
@@ -209,9 +191,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
                     // Will send the response to the listener
                     .doOnNext(s -> listener.onClientSend(s));
                 // Sends request
-                return clientConnection.get().outbound()
+                return clientConnection.get()
+                    .outbound()
                     .sendString(dataStream)
-                    .then(clientConnection.get().inbound()
+                    .then(clientConnection.get()
+                        .inbound()
                         .receive()
                         .flatMap(nxt -> {
                             final String msg;
@@ -220,11 +204,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
                             listener.onClientReceive(msg);
 
                             return response.sendString(Mono.just(msg))
-                                    .then();
+                                .then();
                         }));
             })
             .doOnError(this::handleError)
-            .then();
+            .then());
     }
 
 }
