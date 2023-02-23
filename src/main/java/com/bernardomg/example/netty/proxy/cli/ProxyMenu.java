@@ -30,19 +30,19 @@ import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
 import picocli.CommandLine.Command;
 
 /**
- * TCP server menu.
+ * Proxy menu.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-@Command(description = "TCP server", subcommands = { StartTcpProxyCommand.class }, mixinStandardHelpOptions = true,
+@Command(description = "Proxy", subcommands = { StartTcpProxyCommand.class }, mixinStandardHelpOptions = true,
         versionProvider = ManifestVersionProvider.class)
-public class TcpServerMenu {
+public class ProxyMenu {
 
     /**
      * Default constructor.
      */
-    public TcpServerMenu() {
+    public ProxyMenu() {
         super();
     }
 
