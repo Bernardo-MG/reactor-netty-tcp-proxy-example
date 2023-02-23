@@ -114,18 +114,17 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Client channel init"))
             .doOnConnect(c -> log.debug("Client connect"))
-            .doOnConnected(c -> log.debug("Client connected"))
+            .doOnConnected(c -> {
+                log.debug("Client connected");
+                clientConnection = Optional.ofNullable(c);
+            })
             .doOnDisconnected(c -> log.debug("Client disconnected"))
             .doOnResolve(c -> log.debug("Client resolve"))
             .doOnResolveError((c, t) -> log.debug("Client resolve error"))
             // Sets connection
             .host(targetHost)
             .port(targetPort)
-            .connect()
-            .doOnNext(c -> {
-                log.debug("Received client connection");
-                clientConnection = Optional.ofNullable(c);
-            });
+            .connect();
     }
 
     private final DisposableServer getServer() {
