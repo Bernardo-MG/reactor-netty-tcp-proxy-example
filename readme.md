@@ -11,20 +11,20 @@ mvn clean package
 The JAR will be a runnable Java file. It can be executed like this:
 
 ```
-java -jar target/client.jar message localhost 8080 Hello
+java -jar target/proxy.jar tcp 9090 localhost 8080
 ```
 
 To show other commands:
 
 ```
-java -jar target/client.jar -h
+java -jar target/proxy.jar -h
 ```
 
 This project is part of a series of examples:
 - [Netty TCP Client Example](https://github.com/Bernardo-MG/netty-tcp-client-example)
 - [Reactor Netty TCP Client Example](https://github.com/Bernardo-MG/reactor-netty-tcp-client-example)
-- [Netty TCP Server Example](https://github.com/Bernardo-MG/netty-tcp-server-example)
-- [Reactor Netty TCP Server Example](https://github.com/Bernardo-MG/reactor-netty-tcp-server-example)
+- [Netty TCP Server Example](https://github.com/Bernardo-MG/reactor-netty-proxy-example)
+- [Reactor Netty TCP Server Example](https://github.com/Bernardo-MG/reactor-reactor-netty-proxy-example)
 
 [![Release docs](https://img.shields.io/badge/docs-release-blue.svg)][site-release]
 [![Development docs](https://img.shields.io/badge/docs-develop-blue.svg)][site-develop]
@@ -34,7 +34,7 @@ This project is part of a series of examples:
 
 ## Features
 
-- Netty TCP client
+- Reactor Netty proxy
 - Command Line Client
 
 ## References
