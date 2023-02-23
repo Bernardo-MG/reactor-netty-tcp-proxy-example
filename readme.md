@@ -17,7 +17,7 @@ java -jar target/proxy.jar tcp 9090 localhost 8080
 To show other commands:
 
 ```
-java -jar target/client.jar -h
+java -jar target/proxy.jar -h
 ```
 
 This project is part of a series of examples:
@@ -34,7 +34,7 @@ This project is part of a series of examples:
 
 ## Features
 
-- Netty TCP client
+- Reactor Netty proxy
 - Command Line Client
 
 ## References

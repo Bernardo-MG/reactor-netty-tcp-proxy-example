@@ -1,6 +1,6 @@
-# Netty TCP Server Example
+# Reactor Netty Proxy Example
 
-A small Netty TCP server to serve as an example.
+A small Reactor Netty proxy server to serve as an example.
 
 To use the project first package it:
 
@@ -11,14 +11,11 @@ mvn clean package
 The JAR will be a runnable Java file. It can be executed like this:
 
 ```
-java -jar target/server.jar start 8080
+java -jar target/proxy.jar tcp 9090 localhost 8080
 ```
 
 To show other commands:
 
 ```
-java -jar target/server.jar -h
+java -jar target/proxy.jar -h
 ```
-
-You can use this project along these others:
-- [Netty TCP Client Example](https://github.com/Bernardo-MG/netty-tcp-client-example)
