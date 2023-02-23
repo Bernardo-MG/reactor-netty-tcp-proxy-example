@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import org.reactivestreams.Publisher;
 
+import com.bernardomg.example.netty.proxy.server.channel.EventLoggerChannelHandler;
 import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
 import io.netty.util.CharsetUtil;
@@ -117,6 +118,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnConnected(c -> {
                 log.debug("Client connected");
                 clientConnection = Optional.ofNullable(c);
+
+                c.addHandlerLast(new EventLoggerChannelHandler("client"));
             })
             .doOnDisconnected(c -> log.debug("Client disconnected"))
             .doOnResolve(c -> log.debug("Client resolve"))
