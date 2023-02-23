@@ -25,10 +25,11 @@
 package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.reactivestreams.Publisher;
 
-import com.bernardomg.example.netty.proxy.server.channel.EventLoggerChannelHandler;
+import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -49,20 +50,20 @@ import reactor.netty.tcp.TcpServer;
 @Slf4j
 public final class ReactorNettyTcpProxyServer implements Server {
 
-    private Connection          clientConnection;
+    private Optional<Connection> clientConnection = Optional.empty();
 
-    private final ProxyListener listener;
+    private final ProxyListener  listener;
 
     /**
      * Port which the server will listen to.
      */
-    private final Integer       port;
+    private final Integer        port;
 
-    private DisposableServer    server;
+    private DisposableServer     server;
 
-    private final String        targetHost;
+    private final String         targetHost;
 
-    private final Integer       targetPort;
+    private final Integer        targetPort;
 
     public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
             final ProxyListener lst) {
@@ -82,9 +83,10 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         listener.onStart();
 
-        clientConnection = getClientConnection();
-
         server = getServer();
+
+        server.onDispose()
+            .block();
 
         log.trace("Started server");
     }
@@ -93,7 +95,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
     public final void stop() {
         log.trace("Stopping server");
 
-        clientConnection.dispose();
+        clientConnection.get()
+            .dispose();
 
         listener.onStop();
 
@@ -102,14 +105,12 @@ public final class ReactorNettyTcpProxyServer implements Server {
         log.trace("Stopped server");
     }
 
-    private final Connection getClientConnection() {
-        final Connection connection;
-
+    private final Mono<? extends Connection> getClient() {
         log.trace("Starting client");
 
-        log.debug("Connecting to {}:{}", targetHost, targetPort);
+        log.debug("Client connecting to {}:{}", targetHost, targetPort);
 
-        connection = TcpClient.create()
+        return TcpClient.create()
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Client channel init"))
             .doOnConnect(c -> log.debug("Client connect"))
@@ -120,25 +121,20 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Sets connection
             .host(targetHost)
             .port(targetPort)
-            // Connect
-            .connectNow();
-
-        connection.addHandlerLast(new EventLoggerChannelHandler());
-
-        log.trace("Started client");
-
-        return connection;
+            .connect()
+            .doOnNext(c -> {
+                log.debug("Received client connection");
+                clientConnection = Optional.ofNullable(c);
+            });
     }
 
     private final DisposableServer getServer() {
-        final DisposableServer srv;
-
-        srv = TcpServer.create()
+        return TcpServer.create()
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
             .doOnConnection(c -> {
                 log.debug("Server connection");
-                c.addHandlerLast(new EventLoggerChannelHandler());
+                c.addHandlerLast(new MessageListenerChannelInitializer("server"));
             })
             .doOnBind(c -> log.debug("Server bind"))
             .doOnBound(c -> log.debug("Server bound"))
@@ -148,11 +144,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Binds to port
             .port(port)
             .bindNow();
-
-        srv.onDispose()
-            .block();
-
-        return srv;
     }
 
     /**
@@ -180,7 +171,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         log.debug("Setting up request handler");
 
         // Receives the request and then sends a response
-        return request.receive()
+        return getClient().then(request.receive()
             // Handle request
             .flatMap(next -> {
                 final String                  message;
@@ -200,9 +191,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
                     // Will send the response to the listener
                     .doOnNext(s -> listener.onClientSend(s));
                 // Sends request
-                return clientConnection.outbound()
+                return clientConnection.get()
+                    .outbound()
                     .sendString(dataStream)
-                    .then(clientConnection.inbound()
+                    .then(clientConnection.get()
+                        .inbound()
                         .receive()
                         .flatMap(nxt -> {
                             final String msg;
@@ -211,11 +204,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
                             listener.onClientReceive(msg);
 
                             return response.sendString(Mono.just(msg))
-                                    .then();
+                                .then();
                         }));
             })
             .doOnError(this::handleError)
-            .then();
+            .then());
     }
 
 }
