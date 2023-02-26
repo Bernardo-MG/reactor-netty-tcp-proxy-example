@@ -66,6 +66,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
     private final Integer        targetPort;
 
+    /**
+     * Wiretap flag.
+     */
+    private Boolean              wiretap          = false;
+
     public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
             final ProxyListener lst) {
         super();
@@ -74,6 +79,10 @@ public final class ReactorNettyTcpProxyServer implements Server {
         targetHost = Objects.requireNonNull(trgtHost);
         targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
+    }
+
+    public final void setWiretap(final Boolean wtap) {
+        wiretap = wtap;
     }
 
     @Override
@@ -124,6 +133,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnDisconnected(c -> log.debug("Client disconnected"))
             .doOnResolve(c -> log.debug("Client resolve"))
             .doOnResolveError((c, t) -> log.debug("Client resolve error"))
+            // Wiretap
+            .wiretap(wiretap)
             // Sets connection
             .host(targetHost)
             .port(targetPort)
@@ -141,6 +152,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnBind(c -> log.debug("Server bind"))
             .doOnBound(c -> log.debug("Server bound"))
             .doOnUnbound(c -> log.debug("Server unbound"))
+            // Wiretap
+            .wiretap(wiretap)
             // Adds request handler
             .handle(this::handleServerRequest)
             // Binds to port

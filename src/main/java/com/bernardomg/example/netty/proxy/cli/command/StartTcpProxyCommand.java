@@ -31,7 +31,6 @@ import com.bernardomg.example.netty.proxy.cli.CliWriterProxyListener;
 import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 import com.bernardomg.example.netty.proxy.server.ReactorNettyTcpProxyServer;
-import com.bernardomg.example.netty.proxy.server.Server;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -81,6 +80,13 @@ public final class StartTcpProxyCommand implements Runnable {
     private Boolean     verbose;
 
     /**
+     * Response wait time. This is the number of seconds to wait for responses.
+     */
+    @Option(names = { "--wiretap" }, paramLabel = "flag", description = "Enable wiretap logging",
+            defaultValue = "false")
+    private Boolean     wiretap;
+
+    /**
      * Default constructor.
      */
     public StartTcpProxyCommand() {
@@ -89,9 +95,9 @@ public final class StartTcpProxyCommand implements Runnable {
 
     @Override
     public final void run() {
-        final PrintWriter   writer;
-        final Server        server;
-        final ProxyListener listener;
+        final PrintWriter                writer;
+        final ReactorNettyTcpProxyServer server;
+        final ProxyListener              listener;
 
         if (verbose) {
             // Prints to console
@@ -104,6 +110,7 @@ public final class StartTcpProxyCommand implements Runnable {
 
         listener = new CliWriterProxyListener(port, targetHost, targetPort, writer);
         server = new ReactorNettyTcpProxyServer(port, targetHost, targetPort, listener);
+        server.setWiretap(wiretap);
 
         server.start();
     }
