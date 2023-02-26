@@ -172,7 +172,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
     }
 
     /**
-     * Request event listener. Will receive any request sent by the client, and then send back the response.
+     * Server request event listener. Will receive any request sent by the client, and then redirect it.
      * <p>
      * Additionally it will send the data from both the request and response to the listener.
      *
@@ -191,6 +191,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .flatMap(next -> {
                 final String                  message;
                 final Publisher<? extends String> dataStream;
+                final NettyOutbound           clientRequest;
+                final Publisher<Void>         clientResponse;
 
                 log.debug("Handling request");
 
@@ -205,22 +207,28 @@ public final class ReactorNettyTcpProxyServer implements Server {
                     .flux()
                     // Will send the response to the listener
                     .doOnNext(s -> listener.onClientSend(s));
-                // Sends request
-                return clientConnection.get()
+
+                // Redirect request to client outbound
+                clientRequest = clientConnection.get()
                     .outbound()
-                    .sendString(dataStream)
-                    .then(clientConnection.get()
-                        .inbound()
-                        .receive()
-                        .flatMap(nxt -> {
-                            final String msg;
+                    .sendString(dataStream);
 
-                            msg = nxt.toString(CharsetUtil.UTF_8);
-                            listener.onClientReceive(msg);
+                // Intercept client inbound
+                clientResponse = clientConnection.get()
+                    .inbound()
+                    .receive()
+                    .flatMap(nxt -> {
+                        final String msg;
 
-                            return response.sendString(Mono.just(msg))
-                                .then();
-                        }));
+                        msg = nxt.toString(CharsetUtil.UTF_8);
+                        listener.onClientReceive(msg);
+
+                        return response.sendString(Mono.just(msg))
+                            .then();
+                    });
+
+                // Redirecto to client outbound then intercepts inbound
+                return clientRequest.then(clientResponse);
             })
             // Cancel handler
             .doOnCancel(() -> {
