@@ -187,6 +187,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         // Receives the request and then sends a response
         return getClient().then(request.receive()
+            .doOnCancel(()->log.debug("Proxy client cancel"))
+            .doOnComplete(()->log.debug("Proxy client complete"))
+            .doOnRequest((l)->log.debug("Proxy client request"))
+            .doOnEach((s)->log.debug("Proxy client each"))
+            .doOnNext((n)->log.debug("Proxy client next"))
             // Handle request
             .flatMap(next -> {
                 final String                  message;
