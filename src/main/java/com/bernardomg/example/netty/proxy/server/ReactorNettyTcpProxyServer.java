@@ -118,21 +118,21 @@ public final class ReactorNettyTcpProxyServer implements Server {
     private final Mono<? extends Connection> getClient() {
         log.trace("Starting client");
 
-        log.debug("Client connecting to {}:{}", targetHost, targetPort);
+        log.debug("Proxy client connecting to {}:{}", targetHost, targetPort);
 
         return TcpClient.create()
             // Logs events
-            .doOnChannelInit((o, c, a) -> log.debug("Client channel init"))
-            .doOnConnect(c -> log.debug("Client connect"))
+            .doOnChannelInit((o, c, a) -> log.debug("Proxy client channel init"))
+            .doOnConnect(c -> log.debug("Proxy client connect"))
             .doOnConnected(c -> {
-                log.debug("Client connected");
+                log.debug("Proxy client connected");
                 clientConnection = Optional.ofNullable(c);
 
-                c.addHandlerLast(new EventLoggerChannelHandler("client"));
+                c.addHandlerLast(new EventLoggerChannelHandler("proxy client"));
             })
-            .doOnDisconnected(c -> log.debug("Client disconnected"))
-            .doOnResolve(c -> log.debug("Client resolve"))
-            .doOnResolveError((c, t) -> log.debug("Client resolve error"))
+            .doOnDisconnected(c -> log.debug("Proxy client disconnected"))
+            .doOnResolve(c -> log.debug("Proxy client resolve"))
+            .doOnResolveError((c, t) -> log.debug("Proxy client resolve error"))
             // Wiretap
             .wiretap(wiretap)
             // Sets connection
