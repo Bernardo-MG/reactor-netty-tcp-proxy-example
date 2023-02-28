@@ -71,7 +71,7 @@ public final class RequestConnectionBridge implements ConnectionBridge {
                 log.debug("Handling request");
 
                 log.debug("Server received request: {}", next);
-                
+
                 // Sends message to the listener
                 listener.onServerReceive(next);
 
@@ -91,12 +91,12 @@ public final class RequestConnectionBridge implements ConnectionBridge {
 
     private final Publisher<byte[]> buildStream(final byte[] next) {
         return Mono.just(next)
-                .flux()
-                .doOnNext(m -> {
-                    // Sends the message to the listener
-                    listener.onClientSend(m);
-                });
-        }
+            .flux()
+            .doOnNext(m -> {
+                // Sends the message to the listener
+                listener.onClientSend(m);
+            });
+    }
 
     /**
      * Error handler which sends errors to the log.

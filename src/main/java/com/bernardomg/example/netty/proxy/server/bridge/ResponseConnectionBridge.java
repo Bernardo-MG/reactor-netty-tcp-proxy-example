@@ -91,12 +91,12 @@ public final class ResponseConnectionBridge implements ConnectionBridge {
 
     private final Publisher<byte[]> buildStream(final byte[] next) {
         return Mono.just(next)
-                .flux()
-                .doOnNext(m -> {
-                    // Sends the message to the listener
-                    listener.onServerSend(m);
-                });
-        }
+            .flux()
+            .doOnNext(m -> {
+                // Sends the message to the listener
+                listener.onServerSend(m);
+            });
+    }
 
     /**
      * Error handler which sends errors to the log.
