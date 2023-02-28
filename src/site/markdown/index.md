@@ -20,7 +20,7 @@ To show other commands:
 java -jar target/proxy.jar -h
 ```
 
-## More examples
+## More Examples
 
 This project is part of a series of examples:
 - [Netty Proxy Example](https://github.com/Bernardo-MG/netty-proxy-example)
