@@ -62,43 +62,27 @@ public final class CliWriterProxyListener implements ProxyListener {
     }
 
     @Override
-    public final void onClientReceive(final String message) {
-        if (message.isEmpty()) {
-            writer.println("Client received no message");
-        } else {
-            writer.printf("Client received message: %s", message);
-            writer.println();
-        }
+    public final void onClientReceive(final Object message) {
+        writer.printf("Client received message: %s", message);
+        writer.println();
     }
 
     @Override
-    public final void onClientSend(final String message) {
-        if (message.isEmpty()) {
-            writer.println("Client sent no message");
-        } else {
-            writer.printf("Client sent message: %s", message);
-            writer.println();
-        }
+    public final void onClientSend(final Object message) {
+        writer.printf("Client sent message: %s", message);
+        writer.println();
     }
 
     @Override
-    public final void onServerReceive(final String message) {
-        if (message.isEmpty()) {
-            writer.println("Server received no message");
-        } else {
-            writer.printf("Server received message: %s", message);
-            writer.println();
-        }
+    public final void onServerReceive(final Object message) {
+        writer.printf("Server received message: %s", message);
+        writer.println();
     }
 
     @Override
-    public final void onServerSend(final String message) {
-        if (message.isEmpty()) {
-            writer.println("Server sent no message");
-        } else {
-            writer.printf("Server sent message: %s", message);
-            writer.println();
-        }
+    public final void onServerSend(final Object message) {
+        writer.printf("Server sent message: %s", message);
+        writer.println();
     }
 
     @Override

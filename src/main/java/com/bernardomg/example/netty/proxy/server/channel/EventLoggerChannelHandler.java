@@ -50,43 +50,43 @@ public final class EventLoggerChannelHandler extends ChannelInboundHandlerAdapte
     @Override
     public final void channelActive(final ChannelHandlerContext ctx) throws Exception {
         log.debug("Channel active for {}", name);
-        super.channelActive(ctx);
+        // super.channelActive(ctx);
     }
 
     @Override
     public final void channelInactive(final ChannelHandlerContext ctx) throws Exception {
         log.debug("Channel inactive for {}", name);
-        super.channelInactive(ctx);
+        // super.channelInactive(ctx);
     }
 
     @Override
     public final void channelRead(final ChannelHandlerContext ctx, final Object msg) throws Exception {
         log.debug("Channel read for {}", name);
-        super.channelRead(ctx, msg);
+        // super.channelRead(ctx, msg);
     }
 
     @Override
     public final void channelReadComplete(final ChannelHandlerContext ctx) throws Exception {
         log.debug("Channel read complete for {}", name);
-        super.channelReadComplete(ctx);
+        // super.channelReadComplete(ctx);
     }
 
     @Override
     public final void channelRegistered(final ChannelHandlerContext ctx) throws Exception {
         log.debug("Channel registered for {}", name);
-        super.channelRegistered(ctx);
+        // super.channelRegistered(ctx);
     }
 
     @Override
     public final void channelUnregistered(final ChannelHandlerContext ctx) throws Exception {
         log.debug("Channel unregistered for {}", name);
-        super.channelUnregistered(ctx);
+        // super.channelUnregistered(ctx);
     }
 
     @Override
     public final void userEventTriggered(final ChannelHandlerContext ctx, final Object evt) throws Exception {
         log.debug("User event triggered for {}", name);
-        super.userEventTriggered(ctx, evt);
+        // super.userEventTriggered(ctx, evt);
     }
 
 }

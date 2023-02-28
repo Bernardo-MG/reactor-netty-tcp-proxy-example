@@ -38,7 +38,7 @@ public interface ProxyListener {
      * @param message
      *            message received
      */
-    public void onClientReceive(final String message);
+    public void onClientReceive(final Object message);
 
     /**
      * Reacts to a message being sent.
@@ -46,7 +46,7 @@ public interface ProxyListener {
      * @param message
      *            message sent
      */
-    public void onClientSend(final String message);
+    public void onClientSend(final Object message);
 
     /**
      * Reacts to a message being received.
@@ -54,7 +54,7 @@ public interface ProxyListener {
      * @param message
      *            message received
      */
-    public void onServerReceive(final String message);
+    public void onServerReceive(final Object message);
 
     /**
      * Reacts to a message being sent.
@@ -62,7 +62,7 @@ public interface ProxyListener {
      * @param message
      *            message sent
      */
-    public void onServerSend(final String message);
+    public void onServerSend(final Object message);
 
     /**
      * Reacts to the start event.
