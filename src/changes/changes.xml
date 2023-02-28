@@ -15,5 +15,7 @@
                 Proxying based on connection, not on request.
             </action>
         </release>
+        <release version="1.1.0" date="2023-02-28" description="">
+        </release>
     </body>
 </document>
