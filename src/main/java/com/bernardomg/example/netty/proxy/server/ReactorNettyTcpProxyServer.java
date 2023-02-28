@@ -161,7 +161,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnConnection(this::bridgeConnections)
             // Wiretap
             .wiretap(wiretap)
-            // Binds to port
+            // Bind to port
             .port(port)
             .bindNow();
     }
@@ -180,7 +180,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         return TcpClient.create()
             // Wiretap
             .wiretap(wiretap)
-            // Sets connection
+            // Connect to target
             .host(targetHost)
             .port(targetPort)
             .connect();
