@@ -33,6 +33,8 @@ import com.bernardomg.example.netty.proxy.server.channel.EventLoggerChannelHandl
 import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
 import io.netty.util.CharsetUtil;
+import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
@@ -69,6 +71,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
     /**
      * Wiretap flag.
      */
+    @Setter
+    @NonNull
     private Boolean              wiretap          = false;
 
     public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
@@ -79,10 +83,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
         targetHost = Objects.requireNonNull(trgtHost);
         targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
-    }
-
-    public final void setWiretap(final Boolean wtap) {
-        wiretap = wtap;
     }
 
     @Override
