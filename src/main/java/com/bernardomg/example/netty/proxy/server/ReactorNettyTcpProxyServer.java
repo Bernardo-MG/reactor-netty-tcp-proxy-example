@@ -35,6 +35,7 @@ import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelI
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.DisposableServer;
@@ -152,15 +153,19 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
             .doOnConnection(serverConn -> {
+                final Disposable bridgeDispose;
+
                 log.debug("Server connection");
                 serverConn.addHandlerLast(new MessageListenerChannelInitializer("server"));
                 // Bind to client connection
 
-                getClient().subscribe((clientConn) -> {
+                bridgeDispose = getClient().subscribe((clientConn) -> {
                     log.debug("Binding connections");
                     clientConn.addHandlerLast(new MessageListenerChannelInitializer("client"));
                     bridge.bridge(clientConn, serverConn);
                 });
+
+                serverConn.onDispose(bridgeDispose);
             })
             .doOnBind(c -> log.debug("Server bind"))
             .doOnBound(c -> log.debug("Server bound"))

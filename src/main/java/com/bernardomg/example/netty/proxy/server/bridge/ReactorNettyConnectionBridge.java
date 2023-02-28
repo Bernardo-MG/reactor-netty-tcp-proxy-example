@@ -7,6 +7,7 @@ import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 
@@ -22,15 +23,25 @@ public final class ReactorNettyConnectionBridge implements ConnectionBridge {
     }
 
     @Override
-    public final void bridge(final Connection clientConn, final Connection serverConn) {
-        bindRequest(clientConn, serverConn);
-        bindResponse(clientConn, serverConn);
+    public final Disposable bridge(final Connection clientConn, final Connection serverConn) {
+        final Disposable reqDispose;
+        final Disposable respDispose;
+        
+        
+        reqDispose = bindRequest(clientConn, serverConn);
+        respDispose = bindResponse(clientConn, serverConn);
+        
+        return () -> {
+            log.debug("Disposing bridge");
+            reqDispose.dispose();
+            respDispose.dispose();
+        };
     }
 
-    private final void bindRequest(final Connection clientConn, final Connection serverConn) {
+    private final Disposable bindRequest(final Connection clientConn, final Connection serverConn) {
         log.debug("Binding request. Server inbound -> client outbound");
 
-        serverConn.inbound()
+        return serverConn.inbound()
             .receive()
             .doOnCancel(() -> log.debug("Proxy server cancel"))
             .doOnComplete(() -> log.debug("Proxy server complete"))
@@ -68,10 +79,10 @@ public final class ReactorNettyConnectionBridge implements ConnectionBridge {
             .subscribe();
     }
 
-    private final void bindResponse(final Connection clientConn, final Connection serverConn) {
+    private final Disposable bindResponse(final Connection clientConn, final Connection serverConn) {
         log.debug("Binding response. Client inbound -> server outbound");
 
-        clientConn.inbound()
+        return clientConn.inbound()
             .receive()
             .doOnCancel(() -> log.debug("Proxy client cancel"))
             .doOnComplete(() -> log.debug("Proxy client complete"))
