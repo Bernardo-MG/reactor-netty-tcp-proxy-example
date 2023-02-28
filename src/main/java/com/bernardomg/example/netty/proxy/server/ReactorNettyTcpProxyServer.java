@@ -41,7 +41,13 @@ import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
 /**
- * Netty based TCP server.
+ * Netty based TCP server. Will connect a Reactor Netty server and client, to redirect messages between the local port
+ * and the remote URL being proxied.
+ * <p>
+ * The client and server send messages between each other. The server will receive any request, and then redirect them
+ * to the client, which sends these requests to the proxied URL. This is done backwards for responses.
+ * <p>
+ * So requests go this way: {@code port -> Netty server -> Netty client -> proxied URL}, and responses work in reverse.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
