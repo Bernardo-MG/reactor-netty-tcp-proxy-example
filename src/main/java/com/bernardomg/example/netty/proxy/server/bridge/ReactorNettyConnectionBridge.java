@@ -7,6 +7,7 @@ import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 
@@ -37,7 +38,8 @@ public final class ReactorNettyConnectionBridge implements ConnectionBridge {
             .doOnRequest((l) -> log.debug("Proxy server request"))
             .doOnEach((s) -> log.debug("Proxy server each"))
             .doOnNext((n) -> log.debug("Proxy server next"))
-            .flatMap(next -> {
+            .doOnError(this::handleError)
+            .subscribe(next -> {
                 final String message;
 
                 log.debug("Handling request");
@@ -48,8 +50,8 @@ public final class ReactorNettyConnectionBridge implements ConnectionBridge {
                 log.debug("Server received request: {}", message);
                 listener.onServerReceive(message);
 
-                return clientConn.outbound()
-                    .send(Mono.just(next)
+                clientConn.outbound()
+                    .send(Flux.from(Mono.just(next))
                         .doOnNext((n) -> {
                             final String msg;
 
@@ -58,10 +60,11 @@ public final class ReactorNettyConnectionBridge implements ConnectionBridge {
                             log.debug("Client sends request: {}", msg);
 
                             listener.onClientSend(msg);
-                        }));
-            })
-            .doOnError(this::handleError)
-            .subscribe();
+                        }))
+                    .then()
+                    .subscribe()
+                    .dispose();
+            });
     }
 
     private final void bindResponse(final Connection clientConn, final Connection serverConn) {
