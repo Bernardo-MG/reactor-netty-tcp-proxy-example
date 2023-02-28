@@ -37,6 +37,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+import reactor.netty.ByteBufFlux;
 import reactor.netty.Connection;
 import reactor.netty.DisposableServer;
 import reactor.netty.NettyInbound;
@@ -115,6 +116,39 @@ public final class ReactorNettyTcpProxyServer implements Server {
         log.trace("Stopped server");
     }
 
+    private final void bindRequest(final Connection clientConn, final Connection serverConn) {
+        serverConn.inbound()
+            .receive()
+            .doOnCancel(() -> log.debug("Proxy server cancel"))
+            .doOnComplete(() -> log.debug("Proxy server complete"))
+            .doOnRequest((l) -> log.debug("Proxy server request"))
+            .doOnEach((s) -> log.debug("Proxy server each"))
+            .doOnNext((n) -> log.debug("Proxy server next"))
+            .flatMap(next -> {
+                final String message;
+
+                log.debug("Handling request");
+
+                // Sends the request to the listener
+                message = next.toString(CharsetUtil.UTF_8);
+
+                log.debug("Received request: {}", message);
+                return clientConn.outbound()
+                    .sendString(Mono.just(message)
+                        .flux());
+            })
+            .subscribe();
+    }
+
+    private final void bindResponse(final Connection clientConn, final Connection serverConn) {
+        final ByteBufFlux request;
+
+        request = clientConn.inbound()
+            .receive();
+        serverConn.outbound()
+            .send(request);
+    }
+
     private final Mono<? extends Connection> getClient() {
         log.trace("Starting client");
 
@@ -148,6 +182,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnConnection(c -> {
                 log.debug("Server connection");
                 c.addHandlerLast(new MessageListenerChannelInitializer("server"));
+                getClient().subscribe((clientConn) -> {
+                    log.debug("Binding connections");
+                    bindRequest(clientConn, c);
+                    bindResponse(clientConn, c);
+                });
             })
             .doOnBind(c -> log.debug("Server bind"))
             .doOnBound(c -> log.debug("Server bound"))
@@ -155,7 +194,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Wiretap
             .wiretap(wiretap)
             // Adds request handler
-            .handle(this::handleServerRequest)
+            // .handle(this::handleServerRequest)
             // Binds to port
             .port(port)
             .bindNow();
