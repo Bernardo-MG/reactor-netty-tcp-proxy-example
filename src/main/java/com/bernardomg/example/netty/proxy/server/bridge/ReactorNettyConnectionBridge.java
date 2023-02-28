@@ -5,7 +5,6 @@ import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
-import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
@@ -42,37 +41,32 @@ public final class ReactorNettyConnectionBridge implements ConnectionBridge {
 
         return serverConn.inbound()
             .receive()
+            .asString()
             .doOnCancel(() -> log.debug("Proxy server cancel"))
             .doOnComplete(() -> log.debug("Proxy server complete"))
             .doOnRequest((l) -> log.debug("Proxy server request"))
             .doOnEach((s) -> log.debug("Proxy server each"))
             .doOnNext((n) -> log.debug("Proxy server next"))
             .flatMap(next -> {
-                final String message;
-
                 log.debug("Handling request");
 
                 // Sends the request to the listener
-                message = next.toString(CharsetUtil.UTF_8);
 
-                log.debug("Server received request: {}", message);
-                listener.onServerReceive(message);
+                log.debug("Server received request: {}", next);
+                listener.onServerReceive(next);
 
                 if (clientConn.isDisposed()) {
                     log.error("Client connection already disposed");
                 }
 
                 return clientConn.outbound()
-                    .send(Mono.just(next)
+                    .sendString(Mono.just(next)
                         .doOnNext((n) -> {
-                            final String msg;
+                            log.debug("Client sends request: {}", n);
 
-                            msg = n.toString(CharsetUtil.UTF_8);
-
-                            log.debug("Client sends request: {}", msg);
-
-                            listener.onClientSend(msg);
-                        })).then();
+                            listener.onClientSend(n);
+                        }))
+                    .then();
             })
             .doOnError(this::handleError)
             .subscribe();
@@ -83,36 +77,29 @@ public final class ReactorNettyConnectionBridge implements ConnectionBridge {
 
         return clientConn.inbound()
             .receive()
+            .asString()
             .doOnCancel(() -> log.debug("Proxy client cancel"))
             .doOnComplete(() -> log.debug("Proxy client complete"))
             .doOnRequest((l) -> log.debug("Proxy client request"))
             .doOnEach((s) -> log.debug("Proxy client each"))
             .doOnNext((n) -> log.debug("Proxy client next"))
             .flatMap(next -> {
-                final String message;
 
                 log.debug("Handling response");
 
-                // Sends the request to the listener
-                message = next.toString(CharsetUtil.UTF_8);
-
-                log.debug("Client received response: {}", message);
-                listener.onClientReceive(message);
+                log.debug("Client received response: {}", next);
+                listener.onClientReceive(next);
 
                 if (serverConn.isDisposed()) {
                     log.error("Server connection already disposed");
                 }
 
                 return serverConn.outbound()
-                    .send(Mono.just(next)
+                    .sendString(Mono.just(next)
                         .doOnNext((n) -> {
-                            final String msg;
+                            log.debug("Server sends response: {}", n);
 
-                            msg = n.toString(CharsetUtil.UTF_8);
-
-                            log.debug("Server sends response: {}", msg);
-
-                            listener.onServerSend(msg);
+                            listener.onServerSend(n);
                         }));
             })
             .doOnError(this::handleError)
