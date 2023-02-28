@@ -158,6 +158,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
                 getClient().subscribe((clientConn) -> {
                     log.debug("Binding connections");
+                    clientConn.addHandlerLast(new MessageListenerChannelInitializer("client"));
                     bridge.bridge(clientConn, serverConn);
                 });
             })
