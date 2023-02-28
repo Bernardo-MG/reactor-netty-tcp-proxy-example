@@ -68,10 +68,6 @@ public final class RequestConnectionBridge implements ConnectionBridge {
             .flatMap(next -> {
                 final Publisher<byte[]> dataStream;
 
-                log.debug("Handling request");
-
-                log.debug("Server received request: {}", next);
-
                 // Sends message to the listener
                 listener.onServerReceive(next);
 

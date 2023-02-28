@@ -141,7 +141,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         connectToClient().subscribe((clientConn) -> {
             final Disposable bridgeDispose;
 
-            log.debug("Bridging connection");
+            log.debug("Bridging connection with {}", bridge);
 
             bridgeDispose = bridge.bridge(clientConn, serverConn);
 
