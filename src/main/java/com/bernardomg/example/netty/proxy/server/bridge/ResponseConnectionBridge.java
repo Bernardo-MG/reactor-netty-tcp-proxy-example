@@ -58,8 +58,6 @@ public final class ResponseConnectionBridge implements ConnectionBridge {
 
     @Override
     public final Disposable bridge(final Connection clientConn, final Connection serverConn) {
-        log.debug("Binding response. Client inbound -> server outbound");
-
         return clientConn
             // Receive
             .inbound()
@@ -73,6 +71,8 @@ public final class ResponseConnectionBridge implements ConnectionBridge {
                 log.debug("Handling response");
 
                 log.debug("Client received response: {}", next);
+
+                // Sends message to the listener
                 listener.onClientReceive(next);
 
                 if (serverConn.isDisposed()) {
@@ -91,14 +91,12 @@ public final class ResponseConnectionBridge implements ConnectionBridge {
 
     private final Publisher<byte[]> buildStream(final byte[] next) {
         return Mono.just(next)
-            .flux()
-            // Will send the response to the listener
-            .doOnNext(r -> {
-                log.debug("Server sends response: {}", r);
-
-                listener.onServerSend(r);
-            });
-    }
+                .flux()
+                .doOnNext(m -> {
+                    // Sends the message to the listener
+                    listener.onServerSend(m);
+                });
+        }
 
     /**
      * Error handler which sends errors to the log.

@@ -28,7 +28,6 @@ import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.bridge.BidirectionalConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
-import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
 import lombok.NonNull;
 import lombok.Setter;
@@ -138,8 +137,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *            server connection
      */
     private final void bridgeConnections(final Connection serverConn) {
-        log.debug("Bridging connections");
-
         // Bridge to client connection
         connectToClient().subscribe((clientConn) -> {
             final Disposable bridgeDispose;
@@ -161,7 +158,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
     private final DisposableServer connectoToServer() {
         return TcpServer.create()
             // Logs events
-            .doOnConnection((c) -> c.addHandlerLast(new MessageListenerChannelInitializer("server")))
             .doOnConnection(this::bridgeConnections)
             // Wiretap
             .wiretap(wiretap)
@@ -177,13 +173,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
      * @return {@code Mono} for the client connection
      */
     private final Mono<? extends Connection> connectToClient() {
-        log.trace("Starting client");
+        log.trace("Starting proxy client");
 
         log.debug("Proxy client connecting to {}:{}", targetHost, targetPort);
 
         return TcpClient.create()
-            // Logs events
-            .doOnConnected(c -> c.addHandlerLast(new MessageListenerChannelInitializer("proxy client")))
             // Wiretap
             .wiretap(wiretap)
             // Sets connection

@@ -58,8 +58,6 @@ public final class RequestConnectionBridge implements ConnectionBridge {
 
     @Override
     public final Disposable bridge(final Connection clientConn, final Connection serverConn) {
-        log.debug("Binding request. Server inbound -> client outbound");
-
         return serverConn
             // Receive
             .inbound()
@@ -72,9 +70,9 @@ public final class RequestConnectionBridge implements ConnectionBridge {
 
                 log.debug("Handling request");
 
-                // Sends the request to the listener
-
                 log.debug("Server received request: {}", next);
+                
+                // Sends message to the listener
                 listener.onServerReceive(next);
 
                 if (clientConn.isDisposed()) {
@@ -84,8 +82,7 @@ public final class RequestConnectionBridge implements ConnectionBridge {
                 dataStream = buildStream(next);
 
                 return clientConn.outbound()
-                    .sendByteArray(dataStream)
-                    .then();
+                    .sendByteArray(dataStream);
             })
             .doOnError(this::handleError)
             // Subscribe to run
@@ -94,14 +91,12 @@ public final class RequestConnectionBridge implements ConnectionBridge {
 
     private final Publisher<byte[]> buildStream(final byte[] next) {
         return Mono.just(next)
-            .flux()
-            // Will send the response to the listener
-            .doOnNext(r -> {
-                log.debug("Client sends request: {}", r);
-
-                listener.onClientSend(r);
-            });
-    }
+                .flux()
+                .doOnNext(m -> {
+                    // Sends the message to the listener
+                    listener.onClientSend(m);
+                });
+        }
 
     /**
      * Error handler which sends errors to the log.
