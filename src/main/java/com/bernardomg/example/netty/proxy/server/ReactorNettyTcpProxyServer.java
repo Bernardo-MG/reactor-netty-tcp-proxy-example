@@ -25,7 +25,6 @@
 package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ReactorNettyConnectionBridge;
@@ -68,8 +67,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
     private DisposableServer       server;
 
-    private Optional<Connection>   serverConnection = Optional.empty();
-
     private final String           targetHost;
 
     private final Integer          targetPort;
@@ -79,7 +76,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
      */
     @Setter
     @NonNull
-    private Boolean                wiretap          = false;
+    private Boolean                wiretap = false;
 
     public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
             final ProxyListener lst) {
@@ -112,9 +109,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
     public final void stop() {
         log.trace("Stopping server");
 
-        serverConnection.get()
-            .dispose();
-
         listener.onStop();
 
         server.dispose();
@@ -133,8 +127,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnConnect(c -> log.debug("Proxy client connect"))
             .doOnConnected(c -> {
                 log.debug("Proxy client connected");
-                serverConnection = Optional.ofNullable(c);
-
                 c.addHandlerLast(new EventLoggerChannelHandler("proxy client"));
             })
             .doOnDisconnected(c -> log.debug("Proxy client disconnected"))
