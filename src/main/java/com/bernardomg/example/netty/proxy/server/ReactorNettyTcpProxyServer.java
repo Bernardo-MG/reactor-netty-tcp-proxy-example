@@ -26,8 +26,8 @@ package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 
+import com.bernardomg.example.netty.proxy.server.bridge.BidirectionalConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
-import com.bernardomg.example.netty.proxy.server.bridge.ReactorNettyConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
 import lombok.NonNull;
@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
+import reactor.netty.DisposableChannel;
 import reactor.netty.DisposableServer;
 import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
@@ -55,8 +56,14 @@ import reactor.netty.tcp.TcpServer;
 @Slf4j
 public final class ReactorNettyTcpProxyServer implements Server {
 
+    /**
+     * Connection bridge to connect the proxy server and clients.
+     */
     private final ConnectionBridge bridge;
 
+    /**
+     * Proxy listener. Extension hook which allows reacting to the proxy events.
+     */
     private final ProxyListener    listener;
 
     /**
@@ -64,14 +71,23 @@ public final class ReactorNettyTcpProxyServer implements Server {
      */
     private final Integer          port;
 
-    private DisposableServer       server;
+    /**
+     * Disposable for closing the server port connection.
+     */
+    private DisposableChannel      server;
 
+    /**
+     * Host to which the proxy will connect.
+     */
     private final String           targetHost;
 
+    /**
+     * Port to which the proxy will connect.
+     */
     private final Integer          targetPort;
 
     /**
-     * Wiretap flag.
+     * Wiretap flag. Activates Reactor Netty wiretap logging.
      */
     @Setter
     @NonNull
@@ -85,7 +101,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         targetHost = Objects.requireNonNull(trgtHost);
         targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
-        bridge = new ReactorNettyConnectionBridge(listener);
+        bridge = new BidirectionalConnectionBridge(listener);
     }
 
     @Override
@@ -96,7 +112,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         listener.onStart();
 
-        server = getServer();
+        server = connectoToServer();
 
         server.onDispose()
             .block();
@@ -115,25 +131,56 @@ public final class ReactorNettyTcpProxyServer implements Server {
         log.trace("Stopped server");
     }
 
+    /**
+     * Bridges the server and client connections.
+     *
+     * @param serverConn
+     *            server connection
+     */
     private final void bridgeConnections(final Connection serverConn) {
         log.debug("Bridging connections");
 
-        serverConn.addHandlerLast(new MessageListenerChannelInitializer("server"));
-
-        // Bind to client connection
-        getClient().subscribe((clientConn) -> {
+        // Bridge to client connection
+        connectToClient().subscribe((clientConn) -> {
             final Disposable bridgeDispose;
 
-            log.debug("Bridging client");
+            log.debug("Bridging connection");
 
             bridgeDispose = bridge.bridge(clientConn, serverConn);
 
+            // When the server connection is disposed, so is the bridging
             serverConn.onDispose(bridgeDispose);
         });
-
     }
 
-    private final Mono<? extends Connection> getClient() {
+    /**
+     * Starts a server connection and returns a disposable.
+     *
+     * @return disposable for disposing the server
+     */
+    private final DisposableServer connectoToServer() {
+        return TcpServer.create()
+            // Logs events
+            .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
+            .doOnConnection((c) -> c.addHandlerLast(new MessageListenerChannelInitializer("server")))
+            .doOnConnection(this::bridgeConnections)
+            .doOnBind(c -> log.debug("Server bind"))
+            .doOnBound(c -> log.debug("Server bound"))
+            .doOnUnbound(c -> log.debug("Server unbound"))
+            // Wiretap
+            .wiretap(wiretap)
+            // Binds to port
+            .port(port)
+            .bindNow();
+    }
+
+    /**
+     * Starts a client connection to the target URL, and returns a {@code Mono} to watch for. Once the client has
+     * connected the {@code Mono} will contain the connection.
+     *
+     * @return {@code Mono} for the client connection
+     */
+    private final Mono<? extends Connection> connectToClient() {
         log.trace("Starting client");
 
         log.debug("Proxy client connecting to {}:{}", targetHost, targetPort);
@@ -155,21 +202,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .host(targetHost)
             .port(targetPort)
             .connect();
-    }
-
-    private final DisposableServer getServer() {
-        return TcpServer.create()
-            // Logs events
-            .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
-            .doOnConnection(this::bridgeConnections)
-            .doOnBind(c -> log.debug("Server bind"))
-            .doOnBound(c -> log.debug("Server bound"))
-            .doOnUnbound(c -> log.debug("Server unbound"))
-            // Wiretap
-            .wiretap(wiretap)
-            // Binds to port
-            .port(port)
-            .bindNow();
     }
 
 }

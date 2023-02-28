@@ -21,45 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-package com.bernardomg.example.netty.proxy.server.channel;
-
-import java.util.Objects;
-
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.socket.SocketChannel;
-import lombok.extern.slf4j.Slf4j;
-
 /**
- * Initializes the channel with a message listener. Any message received by the channel will be sent to the listener.
- *
- * @author Bernardo Mart&iacute;nez Garrido
- *
+ * Connection bridging classes.
  */
-@Slf4j
-public final class MessageListenerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
-    /**
-     * Source name.
-     */
-    private final String name;
-
-    public MessageListenerChannelInitializer(final String nm) {
-        super();
-
-        name = Objects.requireNonNull(nm);
-    }
-
-    @Override
-    protected final void initChannel(final SocketChannel ch) throws Exception {
-
-        log.debug("Initializing channel");
-
-        ch.pipeline()
-            // Adds event logger
-            .addLast(new EventLoggerChannelHandler(name));
-
-        log.debug("Initialized channel");
-    }
-
-}
+package com.bernardomg.example.netty.proxy.server.bridge;

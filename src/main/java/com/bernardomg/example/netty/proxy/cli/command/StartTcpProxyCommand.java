@@ -26,6 +26,7 @@ package com.bernardomg.example.netty.proxy.cli.command;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 
 import com.bernardomg.example.netty.proxy.cli.CliWriterProxyListener;
 import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
@@ -97,7 +98,7 @@ public final class StartTcpProxyCommand implements Runnable {
     @Override
     public final void run() {
         final PrintWriter                writer;
-        final ReactorNettyTcpProxyServer server;
+        final ReactorNettyTcpProxyServer proxy;
         final ProxyListener              listener;
 
         if (verbose) {
@@ -106,14 +107,16 @@ public final class StartTcpProxyCommand implements Runnable {
                 .getOut();
         } else {
             // Prints nothing
-            writer = new PrintWriter(OutputStream.nullOutputStream());
+            writer = new PrintWriter(OutputStream.nullOutputStream(), false, Charset.defaultCharset());
         }
 
+        // Create server
         listener = new CliWriterProxyListener(port, targetHost, targetPort, writer);
-        server = new ReactorNettyTcpProxyServer(port, targetHost, targetPort, listener);
-        server.setWiretap(wiretap);
+        proxy = new ReactorNettyTcpProxyServer(port, targetHost, targetPort, listener);
+        proxy.setWiretap(wiretap);
 
-        server.start();
+        // close server
+        proxy.start();
     }
 
 }

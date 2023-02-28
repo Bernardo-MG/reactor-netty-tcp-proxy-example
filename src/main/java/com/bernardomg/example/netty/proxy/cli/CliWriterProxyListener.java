@@ -38,12 +38,18 @@ import com.bernardomg.example.netty.proxy.server.ProxyListener;
 public final class CliWriterProxyListener implements ProxyListener {
 
     /**
-     * Port which the server will listen to.
+     * Port which the proxy will listen to.
      */
     private final Integer     port;
 
+    /**
+     * Host to which the proxy will connect.
+     */
     private final String      targetHost;
 
+    /**
+     * Port to which the proxy will connect.
+     */
     private final Integer     targetPort;
 
     /**

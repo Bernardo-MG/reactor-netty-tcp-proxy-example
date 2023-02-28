@@ -24,26 +24,51 @@
 
 package com.bernardomg.example.netty.proxy.server.bridge;
 
+import com.bernardomg.example.netty.proxy.server.ProxyListener;
+
 import reactor.core.Disposable;
+import reactor.core.Disposables;
 import reactor.netty.Connection;
 
 /**
- * Connection bridge. Joins the client and server connections for proxying.
+ * Bridge for binding both requests and responses. Is composed of request and response bridges, which will take care of
+ * the bridging:
+ * <ul>
+ * <li>Server inbound is redirected to client outbound</li>
+ * <li>Client inbound is redirected to server outbound</li>
+ * </ul>
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-public interface ConnectionBridge {
+public final class BidirectionalConnectionBridge implements ConnectionBridge {
 
     /**
-     * Bridges both connections and returns a disposable, which allows getting rid of the background flux.
-     *
-     * @param clientConn
-     *            client connection
-     * @param serverConn
-     *            server connection
-     * @return disposable to get rid of background flux
+     * Proxy request bridge.
      */
-    public Disposable bridge(final Connection clientConn, final Connection serverConn);
+    private final ConnectionBridge requestConnectionBridge;
+
+    /**
+     * Proxy response bridge.
+     */
+    private final ConnectionBridge responseConnectionBridge;
+
+    public BidirectionalConnectionBridge(final ProxyListener lst) {
+        super();
+
+        requestConnectionBridge = new RequestConnectionBridge(lst);
+        responseConnectionBridge = new ResponseConnectionBridge(lst);
+    }
+
+    @Override
+    public final Disposable bridge(final Connection clientConn, final Connection serverConn) {
+        final Disposable reqDispose;
+        final Disposable respDispose;
+
+        reqDispose = requestConnectionBridge.bridge(clientConn, serverConn);
+        respDispose = responseConnectionBridge.bridge(clientConn, serverConn);
+
+        return Disposables.composite(reqDispose, respDispose);
+    }
 
 }
