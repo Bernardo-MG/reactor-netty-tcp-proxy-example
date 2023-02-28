@@ -161,12 +161,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
     private final DisposableServer connectoToServer() {
         return TcpServer.create()
             // Logs events
-            .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
             .doOnConnection((c) -> c.addHandlerLast(new MessageListenerChannelInitializer("server")))
             .doOnConnection(this::bridgeConnections)
-            .doOnBind(c -> log.debug("Server bind"))
-            .doOnBound(c -> log.debug("Server bound"))
-            .doOnUnbound(c -> log.debug("Server unbound"))
             // Wiretap
             .wiretap(wiretap)
             // Binds to port
@@ -187,15 +183,10 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         return TcpClient.create()
             // Logs events
-            .doOnChannelInit((o, c, a) -> log.debug("Proxy client channel init"))
-            .doOnConnect(c -> log.debug("Proxy client connect"))
             .doOnConnected(c -> {
                 log.debug("Proxy client connected");
                 c.addHandlerLast(new MessageListenerChannelInitializer("proxy client"));
             })
-            .doOnDisconnected(c -> log.debug("Proxy client disconnected"))
-            .doOnResolve(c -> log.debug("Proxy client resolve"))
-            .doOnResolveError((c, t) -> log.debug("Proxy client resolve error"))
             // Wiretap
             .wiretap(wiretap)
             // Sets connection
