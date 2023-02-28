@@ -27,7 +27,7 @@ public final class RequestConnectionBridge implements ConnectionBridge {
 
         return serverConn.inbound()
             .receive()
-            .asString()
+            .asByteArray()
             .doOnCancel(() -> log.debug("Proxy server cancel"))
             .doOnComplete(() -> log.debug("Proxy server complete"))
             .doOnRequest((l) -> log.debug("Proxy server request"))
@@ -46,7 +46,7 @@ public final class RequestConnectionBridge implements ConnectionBridge {
                 }
 
                 return clientConn.outbound()
-                    .sendString(Mono.just(next)
+                    .sendByteArray(Mono.just(next)
                         .doOnNext((n) -> {
                             log.debug("Client sends request: {}", n);
 
