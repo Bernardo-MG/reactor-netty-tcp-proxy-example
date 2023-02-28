@@ -133,7 +133,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
                 // Sends the request to the listener
                 message = next.toString(CharsetUtil.UTF_8);
 
-                log.debug("Received request: {}", message);
+                log.debug("Server received request: {}", message);
                 listener.onServerReceive(message);
 
                 return clientConn.outbound()
@@ -142,6 +142,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
                             final String msg;
 
                             msg = n.toString(CharsetUtil.UTF_8);
+
+                            log.debug("Client sends request: {}", msg);
 
                             listener.onClientSend(msg);
                         }));
@@ -166,7 +168,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
                 // Sends the request to the listener
                 message = next.toString(CharsetUtil.UTF_8);
 
-                log.debug("Received response: {}", message);
+                log.debug("Client received response: {}", message);
                 listener.onClientReceive(message);
 
                 return serverConn.outbound()
@@ -175,6 +177,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
                             final String msg;
 
                             msg = n.toString(CharsetUtil.UTF_8);
+
+                            log.debug("Server sends response: {}", msg);
 
                             listener.onServerSend(msg);
                         }));
