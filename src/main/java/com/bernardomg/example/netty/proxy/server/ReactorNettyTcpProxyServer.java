@@ -27,8 +27,6 @@ package com.bernardomg.example.netty.proxy.server;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.reactivestreams.Publisher;
-
 import com.bernardomg.example.netty.proxy.server.channel.EventLoggerChannelHandler;
 import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
@@ -37,11 +35,8 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
-import reactor.netty.ByteBufFlux;
 import reactor.netty.Connection;
 import reactor.netty.DisposableServer;
-import reactor.netty.NettyInbound;
-import reactor.netty.NettyOutbound;
 import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
@@ -137,16 +132,33 @@ public final class ReactorNettyTcpProxyServer implements Server {
                     .sendString(Mono.just(message)
                         .flux());
             })
+            .doOnError(this::handleError)
             .subscribe();
     }
 
     private final void bindResponse(final Connection clientConn, final Connection serverConn) {
-        final ByteBufFlux request;
+        clientConn.inbound()
+            .receive()
+            .doOnCancel(() -> log.debug("Proxy client cancel"))
+            .doOnComplete(() -> log.debug("Proxy client complete"))
+            .doOnRequest((l) -> log.debug("Proxy client request"))
+            .doOnEach((s) -> log.debug("Proxy client each"))
+            .doOnNext((n) -> log.debug("Proxy client next"))
+            .flatMap(next -> {
+                final String message;
 
-        request = clientConn.inbound()
-            .receive();
-        serverConn.outbound()
-            .send(request);
+                log.debug("Handling response");
+
+                // Sends the request to the listener
+                message = next.toString(CharsetUtil.UTF_8);
+
+                log.debug("Received response: {}", message);
+                return serverConn.outbound()
+                    .sendString(Mono.just(message)
+                        .flux());
+            })
+            .doOnError(this::handleError)
+            .subscribe();
     }
 
     private final Mono<? extends Connection> getClient() {
@@ -182,6 +194,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnConnection(c -> {
                 log.debug("Server connection");
                 c.addHandlerLast(new MessageListenerChannelInitializer("server"));
+                // Bind to client connection
                 getClient().subscribe((clientConn) -> {
                     log.debug("Binding connections");
                     bindRequest(clientConn, c);
@@ -193,8 +206,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnUnbound(c -> log.debug("Server unbound"))
             // Wiretap
             .wiretap(wiretap)
-            // Adds request handler
-            // .handle(this::handleServerRequest)
             // Binds to port
             .port(port)
             .bindNow();
@@ -208,91 +219,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
      */
     private final void handleError(final Throwable ex) {
         log.error(ex.getLocalizedMessage(), ex);
-    }
-
-    /**
-     * Server request event listener. Will receive any request sent by the client, and then redirect it.
-     * <p>
-     * Additionally it will send the data from both the request and response to the listener.
-     *
-     * @param request
-     *            request channel
-     * @param response
-     *            response channel
-     * @return a publisher which handles the request
-     */
-    private final Publisher<Void> handleServerRequest(final NettyInbound request, final NettyOutbound response) {
-        log.debug("Setting up request handler");
-
-        // Receives the request and then sends a response
-        return getClient().then(request.receive()
-            .doOnCancel(() -> log.debug("Proxy client cancel"))
-            .doOnComplete(() -> log.debug("Proxy client complete"))
-            .doOnRequest((l) -> log.debug("Proxy client request"))
-            .doOnEach((s) -> log.debug("Proxy client each"))
-            .doOnNext((n) -> log.debug("Proxy client next"))
-            // Handle request
-            .flatMap(next -> {
-                final String                  message;
-                final Publisher<? extends String> dataStream;
-                final NettyOutbound           clientRequest;
-                final Publisher<Void>         clientResponse;
-
-                log.debug("Handling request");
-
-                // Sends the request to the listener
-                message = next.toString(CharsetUtil.UTF_8);
-
-                log.debug("Received request: {}", message);
-                listener.onServerReceive(message);
-
-                // Request data
-                dataStream = Mono.just(message)
-                    .flux()
-                    // Will send the response to the listener
-                    .doOnNext(s -> listener.onClientSend(s));
-
-                // Redirect request to client outbound
-                clientRequest = clientConnection.get()
-                    .outbound()
-                    .sendString(dataStream);
-
-                // Intercept client inbound
-                clientResponse = clientConnection.get()
-                    .inbound()
-                    .receive()
-                    .flatMap(nxt -> {
-                        final String msg;
-
-                        msg = nxt.toString(CharsetUtil.UTF_8);
-                        listener.onClientReceive(msg);
-
-                        return response.sendString(Mono.just(msg))
-                            .then();
-                    });
-
-                // Redirecto to client outbound then intercepts inbound
-                return clientRequest.then(clientResponse);
-            })
-            // Cancel handler
-            .doOnCancel(() -> {
-                log.debug("Cancelled request. Sends back proxied response");
-                clientConnection.get()
-                    .inbound()
-                    .receive()
-                    .flatMap(nxt -> {
-                        final String msg;
-
-                        msg = nxt.toString(CharsetUtil.UTF_8);
-                        listener.onClientReceive(msg);
-
-                        return response.sendString(Mono.just(msg))
-                            .then();
-                    });
-            })
-            // Error handler
-            .doOnError(this::handleError)
-            .then());
     }
 
 }
