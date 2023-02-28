@@ -21,10 +21,14 @@ java -jar target/proxy.jar -h
 ```
 
 This project is part of a series of examples:
+- [Netty Proxy Example](https://github.com/Bernardo-MG/netty-proxy-example)
+- [Reactor Netty Proxy Example](https://github.com/Bernardo-MG/reactor-netty-proxy-example)
+
+But there are more Netty examples:
 - [Netty TCP Client Example](https://github.com/Bernardo-MG/netty-tcp-client-example)
 - [Reactor Netty TCP Client Example](https://github.com/Bernardo-MG/reactor-netty-tcp-client-example)
-- [Netty TCP Server Example](https://github.com/Bernardo-MG/reactor-netty-proxy-example)
-- [Reactor Netty TCP Server Example](https://github.com/Bernardo-MG/reactor-reactor-netty-proxy-example)
+- [Netty TCP Server Example](https://github.com/Bernardo-MG/netty-tcp-server-example)
+- [Reactor Netty TCP Server Example](https://github.com/Bernardo-MG/reactor-netty-tcp-server-example)
 
 [![Release docs](https://img.shields.io/badge/docs-release-blue.svg)][site-release]
 [![Development docs](https://img.shields.io/badge/docs-develop-blue.svg)][site-develop]
