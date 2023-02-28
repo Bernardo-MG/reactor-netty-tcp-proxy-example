@@ -22,40 +22,28 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.proxy.server;
+package com.bernardomg.example.netty.proxy.cli;
+
+import com.bernardomg.example.netty.proxy.cli.command.StartTcpProxyCommand;
+import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
+
+import picocli.CommandLine.Command;
 
 /**
- * Transaction listener. Allows reacting to the events of a message transaction.
+ * Proxy menu.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-public interface TransactionListener {
+@Command(description = "Proxy", subcommands = { StartTcpProxyCommand.class }, mixinStandardHelpOptions = true,
+        versionProvider = ManifestVersionProvider.class)
+public class ProxyMenu {
 
     /**
-     * Reacts to a message being received.
-     *
-     * @param message
-     *            message received
+     * Default constructor.
      */
-    public void onReceive(final String message);
-
-    /**
-     * Reacts to a message being sent.
-     *
-     * @param message
-     *            message sent
-     */
-    public void onSend(final String message);
-
-    /**
-     * Reacts to the start event.
-     */
-    public void onStart();
-
-    /**
-     * Reacts to the stop event.
-     */
-    public void onStop();
+    public ProxyMenu() {
+        super();
+    }
 
 }

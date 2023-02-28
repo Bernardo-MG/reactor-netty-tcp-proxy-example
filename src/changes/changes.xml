@@ -10,5 +10,10 @@
                 First release of the example.
             </action>
         </release>
+        <release version="1.0.1" date="2023-02-28" description="Fixed redirection">
+            <action dev="bmg" type="fix">
+                Proxying based on connection, not on request.
+            </action>
+        </release>
     </body>
 </document>

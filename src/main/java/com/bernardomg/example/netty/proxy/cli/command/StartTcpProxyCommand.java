@@ -26,14 +26,15 @@ package com.bernardomg.example.netty.proxy.cli.command;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 
 import com.bernardomg.example.netty.proxy.cli.CliWriterProxyListener;
 import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 import com.bernardomg.example.netty.proxy.server.ReactorNettyTcpProxyServer;
-import com.bernardomg.example.netty.proxy.server.Server;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Help;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -76,9 +77,16 @@ public final class StartTcpProxyCommand implements Runnable {
     /**
      * Verbose mode. If active prints info into the console. Active by default.
      */
-    @Option(names = { "--verbose" }, paramLabel = "VERBOSE", description = "print information to console",
-            defaultValue = "true")
+    @Option(names = { "--verbose" }, paramLabel = "flag", description = "Print information to console.",
+            defaultValue = "true", showDefaultValue = Help.Visibility.ALWAYS)
     private Boolean     verbose;
+
+    /**
+     * Response wait time. This is the number of seconds to wait for responses.
+     */
+    @Option(names = { "--wiretap" }, paramLabel = "flag", description = "Enable wiretap logging",
+            defaultValue = "false")
+    private Boolean     wiretap;
 
     /**
      * Default constructor.
@@ -89,9 +97,9 @@ public final class StartTcpProxyCommand implements Runnable {
 
     @Override
     public final void run() {
-        final PrintWriter   writer;
-        final Server        server;
-        final ProxyListener listener;
+        final PrintWriter                writer;
+        final ReactorNettyTcpProxyServer proxy;
+        final ProxyListener              listener;
 
         if (verbose) {
             // Prints to console
@@ -99,13 +107,16 @@ public final class StartTcpProxyCommand implements Runnable {
                 .getOut();
         } else {
             // Prints nothing
-            writer = new PrintWriter(OutputStream.nullOutputStream());
+            writer = new PrintWriter(OutputStream.nullOutputStream(), false, Charset.defaultCharset());
         }
 
+        // Create server
         listener = new CliWriterProxyListener(port, targetHost, targetPort, writer);
-        server = new ReactorNettyTcpProxyServer(port, targetHost, targetPort, listener);
+        proxy = new ReactorNettyTcpProxyServer(port, targetHost, targetPort, listener);
+        proxy.setWiretap(wiretap);
 
-        server.start();
+        // close server
+        proxy.start();
     }
 
 }

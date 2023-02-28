@@ -24,14 +24,14 @@
 
 package com.bernardomg.example.netty.proxy;
 
-import com.bernardomg.example.netty.proxy.cli.TcpServerMenu;
+import com.bernardomg.example.netty.proxy.cli.ProxyMenu;
 
 import picocli.CommandLine;
 
 public class Main {
 
     public static void main(final String[] args) {
-        new CommandLine(new TcpServerMenu()).execute(args);
+        new CommandLine(new ProxyMenu()).execute(args);
     }
 
     public Main() {

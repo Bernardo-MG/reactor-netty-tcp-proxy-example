@@ -39,6 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class MessageListenerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
+    /**
+     * Source name.
+     */
     private final String name;
 
     public MessageListenerChannelInitializer(final String nm) {

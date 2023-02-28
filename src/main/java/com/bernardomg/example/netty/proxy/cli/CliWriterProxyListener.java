@@ -38,12 +38,18 @@ import com.bernardomg.example.netty.proxy.server.ProxyListener;
 public final class CliWriterProxyListener implements ProxyListener {
 
     /**
-     * Port which the server will listen to.
+     * Port which the proxy will listen to.
      */
     private final Integer     port;
 
+    /**
+     * Host to which the proxy will connect.
+     */
     private final String      targetHost;
 
+    /**
+     * Port to which the proxy will connect.
+     */
     private final Integer     targetPort;
 
     /**
@@ -62,43 +68,27 @@ public final class CliWriterProxyListener implements ProxyListener {
     }
 
     @Override
-    public final void onClientReceive(final String message) {
-        if (message.isEmpty()) {
-            writer.println("Client received no message");
-        } else {
-            writer.printf("Client received message: %s", message);
-            writer.println();
-        }
+    public final void onClientReceive(final Object message) {
+        writer.printf("Client received message: %s", message);
+        writer.println();
     }
 
     @Override
-    public final void onClientSend(final String message) {
-        if (message.isEmpty()) {
-            writer.println("Client sent no message");
-        } else {
-            writer.printf("Client sent message: %s", message);
-            writer.println();
-        }
+    public final void onClientSend(final Object message) {
+        writer.printf("Client sent message: %s", message);
+        writer.println();
     }
 
     @Override
-    public final void onServerReceive(final String message) {
-        if (message.isEmpty()) {
-            writer.println("Server received no message");
-        } else {
-            writer.printf("Server received message: %s", message);
-            writer.println();
-        }
+    public final void onServerReceive(final Object message) {
+        writer.printf("Server received message: %s", message);
+        writer.println();
     }
 
     @Override
-    public final void onServerSend(final String message) {
-        if (message.isEmpty()) {
-            writer.println("Server sent no message");
-        } else {
-            writer.printf("Server sent message: %s", message);
-            writer.println();
-        }
+    public final void onServerSend(final Object message) {
+        writer.printf("Server sent message: %s", message);
+        writer.println();
     }
 
     @Override

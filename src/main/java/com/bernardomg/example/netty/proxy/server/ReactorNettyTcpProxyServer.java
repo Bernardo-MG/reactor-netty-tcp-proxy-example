@@ -25,24 +25,30 @@
 package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
-import java.util.Optional;
 
-import org.reactivestreams.Publisher;
-
+import com.bernardomg.example.netty.proxy.server.bridge.BidirectionalConnectionBridge;
+import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
-import io.netty.util.CharsetUtil;
+import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
+import reactor.netty.DisposableChannel;
 import reactor.netty.DisposableServer;
-import reactor.netty.NettyInbound;
-import reactor.netty.NettyOutbound;
 import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
 /**
- * Netty based TCP server.
+ * Netty based TCP server. Will connect a Reactor Netty server and client, to redirect messages between the local port
+ * and the remote URL being proxied.
+ * <p>
+ * The client and server send messages between each other. The server will receive any request, and then redirect them
+ * to the client, which sends these requests to the proxied URL. This is done backwards for responses.
+ * <p>
+ * So requests go this way: {@code port -> Netty server -> Netty client -> proxied URL}, and responses work in reverse.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
@@ -50,20 +56,42 @@ import reactor.netty.tcp.TcpServer;
 @Slf4j
 public final class ReactorNettyTcpProxyServer implements Server {
 
-    private Optional<Connection> clientConnection = Optional.empty();
+    /**
+     * Connection bridge to connect the proxy server and clients.
+     */
+    private final ConnectionBridge bridge;
 
-    private final ProxyListener  listener;
+    /**
+     * Proxy listener. Extension hook which allows reacting to the proxy events.
+     */
+    private final ProxyListener    listener;
 
     /**
      * Port which the server will listen to.
      */
-    private final Integer        port;
+    private final Integer          port;
 
-    private DisposableServer     server;
+    /**
+     * Disposable for closing the server port connection.
+     */
+    private DisposableChannel      server;
 
-    private final String         targetHost;
+    /**
+     * Host to which the proxy will connect.
+     */
+    private final String           targetHost;
 
-    private final Integer        targetPort;
+    /**
+     * Port to which the proxy will connect.
+     */
+    private final Integer          targetPort;
+
+    /**
+     * Wiretap flag. Activates Reactor Netty wiretap logging.
+     */
+    @Setter
+    @NonNull
+    private Boolean                wiretap = false;
 
     public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
             final ProxyListener lst) {
@@ -73,6 +101,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         targetHost = Objects.requireNonNull(trgtHost);
         targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
+        bridge = new BidirectionalConnectionBridge(listener);
     }
 
     @Override
@@ -83,7 +112,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         listener.onStart();
 
-        server = getServer();
+        server = connectoToServer();
 
         server.onDispose()
             .block();
@@ -95,9 +124,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
     public final void stop() {
         log.trace("Stopping server");
 
-        clientConnection.get()
-            .dispose();
-
         listener.onStop();
 
         server.dispose();
@@ -105,110 +131,77 @@ public final class ReactorNettyTcpProxyServer implements Server {
         log.trace("Stopped server");
     }
 
-    private final Mono<? extends Connection> getClient() {
-        log.trace("Starting client");
+    /**
+     * Bridges the server and client connections.
+     *
+     * @param serverConn
+     *            server connection
+     */
+    private final void bridgeConnections(final Connection serverConn) {
+        log.debug("Bridging connections");
 
-        log.debug("Client connecting to {}:{}", targetHost, targetPort);
+        // Bridge to client connection
+        connectToClient().subscribe((clientConn) -> {
+            final Disposable bridgeDispose;
 
-        return TcpClient.create()
-            // Logs events
-            .doOnChannelInit((o, c, a) -> log.debug("Client channel init"))
-            .doOnConnect(c -> log.debug("Client connect"))
-            .doOnConnected(c -> log.debug("Client connected"))
-            .doOnDisconnected(c -> log.debug("Client disconnected"))
-            .doOnResolve(c -> log.debug("Client resolve"))
-            .doOnResolveError((c, t) -> log.debug("Client resolve error"))
-            // Sets connection
-            .host(targetHost)
-            .port(targetPort)
-            .connect()
-            .doOnNext(c -> {
-                log.debug("Received client connection");
-                clientConnection = Optional.ofNullable(c);
-            });
+            log.debug("Bridging connection");
+
+            bridgeDispose = bridge.bridge(clientConn, serverConn);
+
+            // When the server connection is disposed, so is the bridging
+            serverConn.onDispose(bridgeDispose);
+        });
     }
 
-    private final DisposableServer getServer() {
+    /**
+     * Starts a server connection and returns a disposable.
+     *
+     * @return disposable for disposing the server
+     */
+    private final DisposableServer connectoToServer() {
         return TcpServer.create()
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
-            .doOnConnection(c -> {
-                log.debug("Server connection");
-                c.addHandlerLast(new MessageListenerChannelInitializer("server"));
-            })
+            .doOnConnection((c) -> c.addHandlerLast(new MessageListenerChannelInitializer("server")))
+            .doOnConnection(this::bridgeConnections)
             .doOnBind(c -> log.debug("Server bind"))
             .doOnBound(c -> log.debug("Server bound"))
             .doOnUnbound(c -> log.debug("Server unbound"))
-            // Adds request handler
-            .handle(this::handleServerRequest)
+            // Wiretap
+            .wiretap(wiretap)
             // Binds to port
             .port(port)
             .bindNow();
     }
 
     /**
-     * Error handler which sends errors to the log.
+     * Starts a client connection to the target URL, and returns a {@code Mono} to watch for. Once the client has
+     * connected the {@code Mono} will contain the connection.
      *
-     * @param ex
-     *            exception to log
+     * @return {@code Mono} for the client connection
      */
-    private final void handleError(final Throwable ex) {
-        log.error(ex.getLocalizedMessage(), ex);
-    }
+    private final Mono<? extends Connection> connectToClient() {
+        log.trace("Starting client");
 
-    /**
-     * Request event listener. Will receive any request sent by the client, and then send back the response.
-     * <p>
-     * Additionally it will send the data from both the request and response to the listener.
-     *
-     * @param request
-     *            request channel
-     * @param response
-     *            response channel
-     * @return a publisher which handles the request
-     */
-    private final Publisher<Void> handleServerRequest(final NettyInbound request, final NettyOutbound response) {
-        log.debug("Setting up request handler");
+        log.debug("Proxy client connecting to {}:{}", targetHost, targetPort);
 
-        // Receives the request and then sends a response
-        return getClient().then(request.receive()
-            // Handle request
-            .flatMap(next -> {
-                final String                  message;
-                final Publisher<? extends String> dataStream;
-
-                log.debug("Handling request");
-
-                // Sends the request to the listener
-                message = next.toString(CharsetUtil.UTF_8);
-
-                log.debug("Received request: {}", message);
-                listener.onServerReceive(message);
-
-                // Request data
-                dataStream = Mono.just(message)
-                    .flux()
-                    // Will send the response to the listener
-                    .doOnNext(s -> listener.onClientSend(s));
-                // Sends request
-                return clientConnection.get()
-                    .outbound()
-                    .sendString(dataStream)
-                    .then(clientConnection.get()
-                        .inbound()
-                        .receive()
-                        .flatMap(nxt -> {
-                            final String msg;
-
-                            msg = nxt.toString(CharsetUtil.UTF_8);
-                            listener.onClientReceive(msg);
-
-                            return response.sendString(Mono.just(msg))
-                                .then();
-                        }));
+        return TcpClient.create()
+            // Logs events
+            .doOnChannelInit((o, c, a) -> log.debug("Proxy client channel init"))
+            .doOnConnect(c -> log.debug("Proxy client connect"))
+            .doOnConnected(c -> {
+                log.debug("Proxy client connected");
+                c.addHandlerLast(new MessageListenerChannelInitializer("proxy client"));
             })
-            .doOnError(this::handleError)
-            .then());
+            .doOnDisconnected(c -> log.debug("Proxy client disconnected"))
+            .doOnResolve(c -> log.debug("Proxy client resolve"))
+            .doOnResolveError((c, t) -> log.debug("Proxy client resolve error"))
+            // Wiretap
+            .wiretap(wiretap)
+            // Sets connection
+            .host(targetHost)
+            .port(targetPort)
+            .connect();
     }
 
 }

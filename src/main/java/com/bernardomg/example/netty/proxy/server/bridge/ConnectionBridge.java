@@ -22,56 +22,28 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.proxy.server;
+package com.bernardomg.example.netty.proxy.server.bridge;
+
+import reactor.core.Disposable;
+import reactor.netty.Connection;
 
 /**
- * Transaction listener. Allows reacting to the events of a message transaction.
+ * Connection bridge. Joins the client and server connections for proxying.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-public interface ProxyListener {
+public interface ConnectionBridge {
 
     /**
-     * Reacts to a message being received.
+     * Bridges both connections and returns a disposable, which allows getting rid of the background flux.
      *
-     * @param message
-     *            message received
+     * @param clientConn
+     *            client connection
+     * @param serverConn
+     *            server connection
+     * @return disposable to get rid of background flux
      */
-    public void onClientReceive(final Object message);
-
-    /**
-     * Reacts to a message being sent.
-     *
-     * @param message
-     *            message sent
-     */
-    public void onClientSend(final Object message);
-
-    /**
-     * Reacts to a message being received.
-     *
-     * @param message
-     *            message received
-     */
-    public void onServerReceive(final Object message);
-
-    /**
-     * Reacts to a message being sent.
-     *
-     * @param message
-     *            message sent
-     */
-    public void onServerSend(final Object message);
-
-    /**
-     * Reacts to the start event.
-     */
-    public void onStart();
-
-    /**
-     * Reacts to the stop event.
-     */
-    public void onStop();
+    public Disposable bridge(final Connection clientConn, final Connection serverConn);
 
 }
