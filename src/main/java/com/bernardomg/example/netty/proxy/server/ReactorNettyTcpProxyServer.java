@@ -27,10 +27,11 @@ package com.bernardomg.example.netty.proxy.server;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
+import com.bernardomg.example.netty.proxy.server.bridge.ReactorNettyConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.channel.EventLoggerChannelHandler;
 import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
-import io.netty.util.CharsetUtil;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -55,27 +56,29 @@ import reactor.netty.tcp.TcpServer;
 @Slf4j
 public final class ReactorNettyTcpProxyServer implements Server {
 
-    private Optional<Connection> clientConnection = Optional.empty();
+    private final ConnectionBridge bridge;
 
-    private final ProxyListener  listener;
+    private Optional<Connection>   clientConnection = Optional.empty();
+
+    private final ProxyListener    listener;
 
     /**
      * Port which the server will listen to.
      */
-    private final Integer        port;
+    private final Integer          port;
 
-    private DisposableServer     server;
+    private DisposableServer       server;
 
-    private final String         targetHost;
+    private final String           targetHost;
 
-    private final Integer        targetPort;
+    private final Integer          targetPort;
 
     /**
      * Wiretap flag.
      */
     @Setter
     @NonNull
-    private Boolean              wiretap          = false;
+    private Boolean                wiretap          = false;
 
     public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
             final ProxyListener lst) {
@@ -85,6 +88,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         targetHost = Objects.requireNonNull(trgtHost);
         targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
+        bridge = new ReactorNettyConnectionBridge(listener);
     }
 
     @Override
@@ -117,76 +121,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
         log.trace("Stopped server");
     }
 
-    private final void bindRequest(final Connection clientConn, final Connection serverConn) {
-        serverConn.inbound()
-            .receive()
-            .doOnCancel(() -> log.debug("Proxy server cancel"))
-            .doOnComplete(() -> log.debug("Proxy server complete"))
-            .doOnRequest((l) -> log.debug("Proxy server request"))
-            .doOnEach((s) -> log.debug("Proxy server each"))
-            .doOnNext((n) -> log.debug("Proxy server next"))
-            .flatMap(next -> {
-                final String message;
-
-                log.debug("Handling request");
-
-                // Sends the request to the listener
-                message = next.toString(CharsetUtil.UTF_8);
-
-                log.debug("Server received request: {}", message);
-                listener.onServerReceive(message);
-
-                return clientConn.outbound()
-                    .send(Mono.just(next)
-                        .doOnNext((n) -> {
-                            final String msg;
-
-                            msg = n.toString(CharsetUtil.UTF_8);
-
-                            log.debug("Client sends request: {}", msg);
-
-                            listener.onClientSend(msg);
-                        }));
-            })
-            .doOnError(this::handleError)
-            .subscribe();
-    }
-
-    private final void bindResponse(final Connection clientConn, final Connection serverConn) {
-        clientConn.inbound()
-            .receive()
-            .doOnCancel(() -> log.debug("Proxy client cancel"))
-            .doOnComplete(() -> log.debug("Proxy client complete"))
-            .doOnRequest((l) -> log.debug("Proxy client request"))
-            .doOnEach((s) -> log.debug("Proxy client each"))
-            .doOnNext((n) -> log.debug("Proxy client next"))
-            .flatMap(next -> {
-                final String message;
-
-                log.debug("Handling response");
-
-                // Sends the request to the listener
-                message = next.toString(CharsetUtil.UTF_8);
-
-                log.debug("Client received response: {}", message);
-                listener.onClientReceive(message);
-
-                return serverConn.outbound()
-                    .send(Mono.just(next)
-                        .doOnNext((n) -> {
-                            final String msg;
-
-                            msg = n.toString(CharsetUtil.UTF_8);
-
-                            log.debug("Server sends response: {}", msg);
-
-                            listener.onServerSend(msg);
-                        }));
-            })
-            .doOnError(this::handleError)
-            .subscribe();
-    }
-
     private final Mono<? extends Connection> getClient() {
         log.trace("Starting client");
 
@@ -217,14 +151,14 @@ public final class ReactorNettyTcpProxyServer implements Server {
         return TcpServer.create()
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
-            .doOnConnection(c -> {
+            .doOnConnection(serverConn -> {
                 log.debug("Server connection");
-                c.addHandlerLast(new MessageListenerChannelInitializer("server"));
+                serverConn.addHandlerLast(new MessageListenerChannelInitializer("server"));
                 // Bind to client connection
+
                 getClient().subscribe((clientConn) -> {
                     log.debug("Binding connections");
-                    bindRequest(clientConn, c);
-                    bindResponse(clientConn, c);
+                    bridge.bridge(clientConn, serverConn);
                 });
             })
             .doOnBind(c -> log.debug("Server bind"))
@@ -235,16 +169,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
             // Binds to port
             .port(port)
             .bindNow();
-    }
-
-    /**
-     * Error handler which sends errors to the log.
-     *
-     * @param ex
-     *            exception to log
-     */
-    private final void handleError(final Throwable ex) {
-        log.error(ex.getLocalizedMessage(), ex);
     }
 
 }
