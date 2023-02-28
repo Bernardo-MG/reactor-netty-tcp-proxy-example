@@ -28,7 +28,6 @@ import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ReactorNettyConnectionBridge;
-import com.bernardomg.example.netty.proxy.server.channel.EventLoggerChannelHandler;
 import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
 import lombok.NonNull;
@@ -127,7 +126,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
             log.debug("Bridging client");
 
-            clientConn.addHandlerLast(new MessageListenerChannelInitializer("client"));
             bridgeDispose = bridge.bridge(clientConn, serverConn);
 
             serverConn.onDispose(bridgeDispose);
@@ -146,7 +144,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnConnect(c -> log.debug("Proxy client connect"))
             .doOnConnected(c -> {
                 log.debug("Proxy client connected");
-                c.addHandlerLast(new EventLoggerChannelHandler("proxy client"));
+                c.addHandlerLast(new MessageListenerChannelInitializer("proxy client"));
             })
             .doOnDisconnected(c -> log.debug("Proxy client disconnected"))
             .doOnResolve(c -> log.debug("Proxy client resolve"))
