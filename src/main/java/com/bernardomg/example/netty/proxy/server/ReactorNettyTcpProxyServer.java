@@ -116,6 +116,25 @@ public final class ReactorNettyTcpProxyServer implements Server {
         log.trace("Stopped server");
     }
 
+    private final void bridgeConnections(final Connection serverConn) {
+        log.debug("Bridging connections");
+
+        serverConn.addHandlerLast(new MessageListenerChannelInitializer("server"));
+
+        // Bind to client connection
+        getClient().subscribe((clientConn) -> {
+            final Disposable bridgeDispose;
+
+            log.debug("Bridging client");
+
+            clientConn.addHandlerLast(new MessageListenerChannelInitializer("client"));
+            bridgeDispose = bridge.bridge(clientConn, serverConn);
+
+            serverConn.onDispose(bridgeDispose);
+        });
+
+    }
+
     private final Mono<? extends Connection> getClient() {
         log.trace("Starting client");
 
@@ -144,21 +163,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         return TcpServer.create()
             // Logs events
             .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
-            .doOnConnection(serverConn -> {
-                final Disposable bridgeDispose;
-
-                log.debug("Server connection");
-                serverConn.addHandlerLast(new MessageListenerChannelInitializer("server"));
-                // Bind to client connection
-
-                bridgeDispose = getClient().subscribe((clientConn) -> {
-                    log.debug("Binding connections");
-                    clientConn.addHandlerLast(new MessageListenerChannelInitializer("client"));
-                    bridge.bridge(clientConn, serverConn);
-                });
-
-                serverConn.onDispose(bridgeDispose);
-            })
+            .doOnConnection(this::bridgeConnections)
             .doOnBind(c -> log.debug("Server bind"))
             .doOnBound(c -> log.debug("Server bound"))
             .doOnUnbound(c -> log.debug("Server unbound"))
