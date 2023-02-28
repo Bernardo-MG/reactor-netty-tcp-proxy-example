@@ -26,11 +26,10 @@ public final class ReactorNettyConnectionBridge implements ConnectionBridge {
     public final Disposable bridge(final Connection clientConn, final Connection serverConn) {
         final Disposable reqDispose;
         final Disposable respDispose;
-        
-        
+
         reqDispose = bindRequest(clientConn, serverConn);
         respDispose = bindResponse(clientConn, serverConn);
-        
+
         return () -> {
             log.debug("Disposing bridge");
             reqDispose.dispose();
@@ -73,7 +72,7 @@ public final class ReactorNettyConnectionBridge implements ConnectionBridge {
                             log.debug("Client sends request: {}", msg);
 
                             listener.onClientSend(msg);
-                        }));
+                        })).then();
             })
             .doOnError(this::handleError)
             .subscribe();

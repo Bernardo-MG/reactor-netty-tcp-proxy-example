@@ -59,8 +59,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
     private final ConnectionBridge bridge;
 
-    private Optional<Connection>   clientConnection = Optional.empty();
-
     private final ProxyListener    listener;
 
     /**
@@ -69,6 +67,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
     private final Integer          port;
 
     private DisposableServer       server;
+
+    private Optional<Connection>   serverConnection = Optional.empty();
 
     private final String           targetHost;
 
@@ -112,7 +112,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
     public final void stop() {
         log.trace("Stopping server");
 
-        clientConnection.get()
+        serverConnection.get()
             .dispose();
 
         listener.onStop();
@@ -133,7 +133,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .doOnConnect(c -> log.debug("Proxy client connect"))
             .doOnConnected(c -> {
                 log.debug("Proxy client connected");
-                clientConnection = Optional.ofNullable(c);
+                serverConnection = Optional.ofNullable(c);
 
                 c.addHandlerLast(new EventLoggerChannelHandler("proxy client"));
             })
