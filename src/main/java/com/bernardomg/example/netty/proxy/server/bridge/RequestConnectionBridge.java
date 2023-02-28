@@ -26,6 +26,8 @@ package com.bernardomg.example.netty.proxy.server.bridge;
 
 import java.util.Objects;
 
+import org.reactivestreams.Publisher;
+
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import lombok.extern.slf4j.Slf4j;
@@ -64,14 +66,10 @@ public final class RequestConnectionBridge implements ConnectionBridge {
             .receive()
             // Transform to byte array
             .asByteArray()
-            // Logging
-            .doOnCancel(() -> log.debug("Proxy server cancel"))
-            .doOnComplete(() -> log.debug("Proxy server complete"))
-            .doOnRequest((l) -> log.debug("Proxy server request"))
-            .doOnEach((s) -> log.debug("Proxy server each"))
-            .doOnNext((n) -> log.debug("Proxy server next"))
             // Process
             .flatMap(next -> {
+                final Publisher<byte[]> dataStream;
+
                 log.debug("Handling request");
 
                 // Sends the request to the listener
@@ -83,18 +81,26 @@ public final class RequestConnectionBridge implements ConnectionBridge {
                     log.error("Client connection already disposed");
                 }
 
-                return clientConn.outbound()
-                    .sendByteArray(Mono.just(next)
-                        .doOnNext((n) -> {
-                            log.debug("Client sends request: {}", n);
+                dataStream = buildStream(next);
 
-                            listener.onClientSend(n);
-                        }))
+                return clientConn.outbound()
+                    .sendByteArray(dataStream)
                     .then();
             })
             .doOnError(this::handleError)
             // Subscribe to run
             .subscribe();
+    }
+
+    private final Publisher<byte[]> buildStream(final byte[] next) {
+        return Mono.just(next)
+            .flux()
+            // Will send the response to the listener
+            .doOnNext(r -> {
+                log.debug("Client sends request: {}", r);
+
+                listener.onClientSend(r);
+            });
     }
 
     /**

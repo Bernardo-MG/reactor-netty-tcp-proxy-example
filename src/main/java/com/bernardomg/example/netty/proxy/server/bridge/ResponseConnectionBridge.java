@@ -26,6 +26,8 @@ package com.bernardomg.example.netty.proxy.server.bridge;
 
 import java.util.Objects;
 
+import org.reactivestreams.Publisher;
+
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import lombok.extern.slf4j.Slf4j;
@@ -64,14 +66,9 @@ public final class ResponseConnectionBridge implements ConnectionBridge {
             .receive()
             // Transform to byte array
             .asByteArray()
-            // Logging
-            .doOnCancel(() -> log.debug("Proxy client cancel"))
-            .doOnComplete(() -> log.debug("Proxy client complete"))
-            .doOnRequest((l) -> log.debug("Proxy client request"))
-            .doOnEach((s) -> log.debug("Proxy client each"))
-            .doOnNext((n) -> log.debug("Proxy client next"))
             // Process
             .flatMap(next -> {
+                final Publisher<byte[]> dataStream;
 
                 log.debug("Handling response");
 
@@ -82,17 +79,25 @@ public final class ResponseConnectionBridge implements ConnectionBridge {
                     log.error("Server connection already disposed");
                 }
 
-                return serverConn.outbound()
-                    .sendByteArray(Mono.just(next)
-                        .doOnNext((n) -> {
-                            log.debug("Server sends response: {}", n);
+                dataStream = buildStream(next);
 
-                            listener.onServerSend(n);
-                        }));
+                return serverConn.outbound()
+                    .sendByteArray(dataStream);
             })
             .doOnError(this::handleError)
             // Subscribe to run
             .subscribe();
+    }
+
+    private final Publisher<byte[]> buildStream(final byte[] next) {
+        return Mono.just(next)
+            .flux()
+            // Will send the response to the listener
+            .doOnNext(r -> {
+                log.debug("Server sends response: {}", r);
+
+                listener.onServerSend(r);
+            });
     }
 
     /**

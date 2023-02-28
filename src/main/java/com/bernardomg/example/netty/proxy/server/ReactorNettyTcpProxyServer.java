@@ -183,10 +183,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         return TcpClient.create()
             // Logs events
-            .doOnConnected(c -> {
-                log.debug("Proxy client connected");
-                c.addHandlerLast(new MessageListenerChannelInitializer("proxy client"));
-            })
+            .doOnConnected(c -> c.addHandlerLast(new MessageListenerChannelInitializer("proxy client")))
             // Wiretap
             .wiretap(wiretap)
             // Sets connection
