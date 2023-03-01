@@ -11,7 +11,7 @@ mvn clean package
 The JAR will be a runnable Java file. It can be executed like this:
 
 ```
-java -jar target/proxy.jar tcp 9090 localhost 8080
+java -jar target/proxy.jar start 9090 localhost 8080
 ```
 
 To show other commands:

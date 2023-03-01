@@ -46,9 +46,9 @@ import picocli.CommandLine.Spec;
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-@Command(name = "tcp", description = "Starts a TCP proxy", mixinStandardHelpOptions = true,
+@Command(name = "start", description = "Starts a TCP proxy", mixinStandardHelpOptions = true,
         versionProvider = ManifestVersionProvider.class)
-public final class StartTcpProxyCommand implements Runnable {
+public final class StartProxyCommand implements Runnable {
 
     /**
      * Server port.
@@ -91,7 +91,7 @@ public final class StartTcpProxyCommand implements Runnable {
     /**
      * Default constructor.
      */
-    public StartTcpProxyCommand() {
+    public StartProxyCommand() {
         super();
     }
 
