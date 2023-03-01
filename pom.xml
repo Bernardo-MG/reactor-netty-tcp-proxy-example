@@ -18,13 +18,13 @@
    <!-- ********************************************** -->
 
    <groupId>com.bernardomg.example</groupId>
-   <artifactId>reactor-netty-proxy-example</artifactId>
+   <artifactId>reactor-netty-tcp-proxy-example</artifactId>
    <version>1.1.0-SNAPSHOT</version>
    <packaging>jar</packaging>
 
-   <name>Reactor Netty Proxy Example</name>
-   <description>An example setting up a Reactor Netty proxy server.</description>
-   <url>https://github.com/bernardo-mg/reactor-netty-proxy-example</url>
+   <name>Reactor Netty TCP Proxy Example</name>
+   <description>An example setting up a Reactor Netty TCP proxy server.</description>
+   <url>https://github.com/bernardo-mg/reactor-netty-tcp-proxy-example</url>
    <inceptionYear>2023</inceptionYear>
 
    <licenses>
@@ -65,20 +65,20 @@
    <!-- ********************************************** -->
 
    <scm>
-      <connection>scm:git:https://github.com/bernardo-mg/reactor-netty-proxy-example.git</connection>
-      <developerConnection>scm:git:https://github.com/bernardo-mg/reactor-netty-proxy-example.git</developerConnection>
+      <connection>scm:git:https://github.com/bernardo-mg/reactor-netty-tcp-proxy-example.git</connection>
+      <developerConnection>scm:git:https://github.com/bernardo-mg/reactor-netty-tcp-proxy-example.git</developerConnection>
       <tag>head</tag>
-      <url>https://www.github.com/bernardo-mg/reactor-netty-proxy-example</url>
+      <url>https://www.github.com/bernardo-mg/reactor-netty-tcp-proxy-example</url>
    </scm>
 
    <issueManagement>
       <system>GitHub</system>
-      <url>https://www.github.com/bernardo-mg/reactor-netty-proxy-example/issues</url>
+      <url>https://www.github.com/bernardo-mg/reactor-netty-tcp-proxy-example/issues</url>
    </issueManagement>
 
    <ciManagement>
       <system>Github</system>
-      <url>https://www.github.com/bernardo-mg/reactor-netty-proxy-example/actions</url>
+      <url>https://www.github.com/bernardo-mg/reactor-netty-tcp-proxy-example/actions</url>
       <notifiers />
    </ciManagement>
 

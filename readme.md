@@ -1,4 +1,4 @@
-# Reactor Netty Proxy Example
+# Reactor Netty TCP Proxy Example
 
 A small Reactor Netty proxy server to serve as an example.
 
@@ -21,8 +21,8 @@ java -jar target/proxy.jar -h
 ```
 
 This project is part of a series of examples:
-- [Netty Proxy Example](https://github.com/Bernardo-MG/netty-proxy-example)
-- [Reactor Netty Proxy Example](https://github.com/Bernardo-MG/reactor-netty-proxy-example)
+- [Netty TCP Proxy Example](https://github.com/Bernardo-MG/netty-tcp-proxy-example)
+- [Reactor Netty TCP Proxy Example](https://github.com/Bernardo-MG/reactor-netty-tcp-proxy-example)
 
 But there are more Netty examples:
 - [Netty TCP Client Example](https://github.com/Bernardo-MG/netty-tcp-client-example)
