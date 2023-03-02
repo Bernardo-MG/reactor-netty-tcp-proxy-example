@@ -87,10 +87,7 @@ public final class RequestConnectionBridge implements ConnectionBridge {
     private final Publisher<byte[]> buildStream(final byte[] next) {
         return Mono.just(next)
             .flux()
-            .doOnNext(m -> {
-                // Sends the message to the listener
-                listener.onClientSend(m);
-            });
+            .doOnNext(listener::onClientSend);
     }
 
 }
