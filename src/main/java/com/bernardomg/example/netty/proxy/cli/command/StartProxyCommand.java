@@ -28,6 +28,9 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+
 import com.bernardomg.example.netty.proxy.cli.CliWriterProxyListener;
 import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
@@ -49,6 +52,12 @@ import picocli.CommandLine.Spec;
 @Command(name = "start", description = "Starts a TCP proxy", mixinStandardHelpOptions = true,
         versionProvider = ManifestVersionProvider.class)
 public final class StartProxyCommand implements Runnable {
+
+    /**
+     * Debug flag. Shows debug logs.
+     */
+    @Option(names = { "--debug" }, paramLabel = "flag", description = "Enable debug logs.", defaultValue = "false")
+    private Boolean     debug;
 
     /**
      * Server port.
@@ -82,13 +91,6 @@ public final class StartProxyCommand implements Runnable {
     private Boolean     verbose;
 
     /**
-     * Response wait time. This is the number of seconds to wait for responses.
-     */
-    @Option(names = { "--wiretap" }, paramLabel = "flag", description = "Enable wiretap logging",
-            defaultValue = "false")
-    private Boolean     wiretap;
-
-    /**
      * Default constructor.
      */
     public StartProxyCommand() {
@@ -100,6 +102,10 @@ public final class StartProxyCommand implements Runnable {
         final PrintWriter                writer;
         final ReactorNettyTcpProxyServer proxy;
         final ProxyListener              listener;
+
+        if (debug) {
+            activateDebugLog();
+        }
 
         if (verbose) {
             // Prints to console
@@ -113,10 +119,18 @@ public final class StartProxyCommand implements Runnable {
         // Create server
         listener = new CliWriterProxyListener(port, targetHost, targetPort, writer);
         proxy = new ReactorNettyTcpProxyServer(port, targetHost, targetPort, listener);
-        proxy.setWiretap(wiretap);
+        proxy.setWiretap(debug);
 
         // close server
         proxy.start();
+    }
+
+    /**
+     * Activates debug logs for the application.
+     */
+    private final void activateDebugLog() {
+        Configurator.setLevel("com.bernardomg.example", Level.DEBUG);
+        Configurator.setLevel("reactor.netty.tcp", Level.DEBUG);
     }
 
 }
