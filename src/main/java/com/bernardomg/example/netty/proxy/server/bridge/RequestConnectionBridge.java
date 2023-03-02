@@ -80,7 +80,6 @@ public final class RequestConnectionBridge implements ConnectionBridge {
                 return clientConn.outbound()
                     .sendByteArray(dataStream);
             })
-            .doOnError(this::handleError)
             // Subscribe to run
             .subscribe();
     }
@@ -92,16 +91,6 @@ public final class RequestConnectionBridge implements ConnectionBridge {
                 // Sends the message to the listener
                 listener.onClientSend(m);
             });
-    }
-
-    /**
-     * Error handler which sends errors to the log.
-     *
-     * @param ex
-     *            exception to log
-     */
-    private final void handleError(final Throwable ex) {
-        log.error(ex.getLocalizedMessage(), ex);
     }
 
 }
