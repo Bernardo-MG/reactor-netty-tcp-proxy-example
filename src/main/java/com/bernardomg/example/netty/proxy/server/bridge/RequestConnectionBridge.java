@@ -41,7 +41,7 @@ import reactor.netty.Connection;
  * <ul>
  * <li>Server inbound is redirected to client outbound</li>
  * </ul>
- * <h1>Listener</h1>
+ * <h2>Listener</h2>
  * <p>
  * Additionally, the bridged connection will send requests to a {@link ProxyListener}.
  *

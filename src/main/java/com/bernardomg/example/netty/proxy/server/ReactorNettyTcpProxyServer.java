@@ -43,7 +43,7 @@ import reactor.netty.tcp.TcpServer;
 /**
  * Netty based TCP proxy. With the user of a Reactor Netty server and clients, it will redirect all connections to the
  * target URL.
- * <h1>Connection bridging</h1>
+ * <h2>Connection bridging</h2>
  * <p>
  * When the server starts a new connection, then a new client is started for said server connection. They are connected
  * through a {@link BidirectionalConnectionBridge}, which will redirect request and response streams
