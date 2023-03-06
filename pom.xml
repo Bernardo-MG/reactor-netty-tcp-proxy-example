@@ -18,13 +18,13 @@
    <!-- ********************************************** -->
 
    <groupId>com.bernardomg.example</groupId>
-   <artifactId>reactor-netty-proxy-example</artifactId>
-   <version>1.0.1</version>
+   <artifactId>reactor-netty-tcp-proxy-example</artifactId>
+   <version>1.0.2</version>
    <packaging>jar</packaging>
 
-   <name>Reactor Netty Proxy Example</name>
-   <description>An example setting up a Reactor Netty proxy server.</description>
-   <url>https://github.com/bernardo-mg/reactor-netty-proxy-example</url>
+   <name>Reactor Netty TCP Proxy Example</name>
+   <description>An example setting up a Reactor Netty TCP proxy server.</description>
+   <url>https://github.com/bernardo-mg/reactor-netty-tcp-proxy-example</url>
    <inceptionYear>2023</inceptionYear>
 
    <licenses>
@@ -65,20 +65,20 @@
    <!-- ********************************************** -->
 
    <scm>
-      <connection>scm:git:https://github.com/bernardo-mg/reactor-netty-proxy-example.git</connection>
-      <developerConnection>scm:git:https://github.com/bernardo-mg/reactor-netty-proxy-example.git</developerConnection>
+      <connection>scm:git:https://github.com/bernardo-mg/reactor-netty-tcp-proxy-example.git</connection>
+      <developerConnection>scm:git:https://github.com/bernardo-mg/reactor-netty-tcp-proxy-example.git</developerConnection>
       <tag>head</tag>
-      <url>https://www.github.com/bernardo-mg/reactor-netty-proxy-example</url>
+      <url>https://www.github.com/bernardo-mg/reactor-netty-tcp-proxy-example</url>
    </scm>
 
    <issueManagement>
       <system>GitHub</system>
-      <url>https://www.github.com/bernardo-mg/reactor-netty-proxy-example/issues</url>
+      <url>https://www.github.com/bernardo-mg/reactor-netty-tcp-proxy-example/issues</url>
    </issueManagement>
 
    <ciManagement>
       <system>Github</system>
-      <url>https://www.github.com/bernardo-mg/reactor-netty-proxy-example/actions</url>
+      <url>https://www.github.com/bernardo-mg/reactor-netty-tcp-proxy-example/actions</url>
       <notifiers />
    </ciManagement>
 
@@ -200,17 +200,25 @@
          <scope>provided</scope>
       </dependency>
       <!-- ============================================== -->
-      <!-- ================== Reactor =================== -->
+      <!-- ================== REACTOR =================== -->
+      <!-- ============================================== -->
+      <dependency>
+         <!-- Reactor core -->
+         <groupId>io.projectreactor</groupId>
+         <artifactId>reactor-core</artifactId> 
+      </dependency>
+      <dependency>
+         <!-- Reactive Streams -->
+         <groupId>org.reactivestreams</groupId>
+         <artifactId>reactive-streams</artifactId>
+      </dependency>
+      <!-- ============================================== -->
+      <!-- =================== NETTY ==================== -->
       <!-- ============================================== -->
       <dependency>
          <!-- Reactor Netty core -->
          <groupId>io.projectreactor.netty</groupId>
          <artifactId>reactor-netty-core</artifactId> 
-      </dependency>
-      <dependency>
-         <!-- Reactor Netty HTTP -->
-         <groupId>io.projectreactor.netty</groupId>
-         <artifactId>reactor-netty-http</artifactId>
       </dependency>
       <!-- ============================================== -->
       <!-- ================== LOGGERS =================== -->
@@ -220,6 +228,12 @@
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-api</artifactId>
          <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+         <!-- Log4j API -->
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-api</artifactId>
+         <version>${log4j.version}</version>
       </dependency>
       <dependency>
          <!-- Log4j SLF4J Bridge -->

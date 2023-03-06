@@ -28,7 +28,6 @@ import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.bridge.BidirectionalConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
-import com.bernardomg.example.netty.proxy.server.channel.MessageListenerChannelInitializer;
 
 import lombok.NonNull;
 import lombok.Setter;
@@ -42,13 +41,16 @@ import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
 /**
- * Netty based TCP server. Will connect a Reactor Netty server and client, to redirect messages between the local port
- * and the remote URL being proxied.
+ * Netty based TCP proxy. With the user of a Reactor Netty server and clients, it will redirect all connections to the
+ * target URL.
+ * <h2>Connection bridging</h2>
  * <p>
- * The client and server send messages between each other. The server will receive any request, and then redirect them
- * to the client, which sends these requests to the proxied URL. This is done backwards for responses.
+ * When the server starts a new connection, then a new client is started for said server connection. They are connected
+ * through a {@link BidirectionalConnectionBridge}, which will redirect request and response streams
+ * between them. So requests go this way: {@code listened port -> Netty server -> Netty client -> proxied URL}, and
+ * responses work in reverse.
  * <p>
- * So requests go this way: {@code port -> Netty server -> Netty client -> proxied URL}, and responses work in reverse.
+ * This also means than for each proxy server there may exist multiple clients. As many as current requests.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
@@ -93,6 +95,18 @@ public final class ReactorNettyTcpProxyServer implements Server {
     @NonNull
     private Boolean                wiretap = false;
 
+    /**
+     * Constructs a proxy server redirecting the received port to the target URL.
+     *
+     * @param prt
+     *            port to listen to
+     * @param trgtHost
+     *            target host
+     * @param trgtPort
+     *            target port
+     * @param lst
+     *            proxy listener
+     */
     public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
             final ProxyListener lst) {
         super();
@@ -138,13 +152,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *            server connection
      */
     private final void bridgeConnections(final Connection serverConn) {
-        log.debug("Bridging connections");
-
-        // Bridge to client connection
+        // Connect to client, and wait for connection to be available
         connectToClient().subscribe((clientConn) -> {
             final Disposable bridgeDispose;
 
-            log.debug("Bridging connection");
+            log.debug("Bridging connection with {}", bridge);
 
             bridgeDispose = bridge.bridge(clientConn, serverConn);
 
@@ -161,15 +173,10 @@ public final class ReactorNettyTcpProxyServer implements Server {
     private final DisposableServer connectoToServer() {
         return TcpServer.create()
             // Logs events
-            .doOnChannelInit((o, c, a) -> log.debug("Server channel init"))
-            .doOnConnection((c) -> c.addHandlerLast(new MessageListenerChannelInitializer("server")))
             .doOnConnection(this::bridgeConnections)
-            .doOnBind(c -> log.debug("Server bind"))
-            .doOnBound(c -> log.debug("Server bound"))
-            .doOnUnbound(c -> log.debug("Server unbound"))
             // Wiretap
             .wiretap(wiretap)
-            // Binds to port
+            // Bind to port
             .port(port)
             .bindNow();
     }
@@ -181,24 +188,14 @@ public final class ReactorNettyTcpProxyServer implements Server {
      * @return {@code Mono} for the client connection
      */
     private final Mono<? extends Connection> connectToClient() {
-        log.trace("Starting client");
+        log.trace("Starting proxy client");
 
         log.debug("Proxy client connecting to {}:{}", targetHost, targetPort);
 
         return TcpClient.create()
-            // Logs events
-            .doOnChannelInit((o, c, a) -> log.debug("Proxy client channel init"))
-            .doOnConnect(c -> log.debug("Proxy client connect"))
-            .doOnConnected(c -> {
-                log.debug("Proxy client connected");
-                c.addHandlerLast(new MessageListenerChannelInitializer("proxy client"));
-            })
-            .doOnDisconnected(c -> log.debug("Proxy client disconnected"))
-            .doOnResolve(c -> log.debug("Proxy client resolve"))
-            .doOnResolveError((c, t) -> log.debug("Proxy client resolve error"))
             // Wiretap
             .wiretap(wiretap)
-            // Sets connection
+            // Connect to target
             .host(targetHost)
             .port(targetPort)
             .connect();

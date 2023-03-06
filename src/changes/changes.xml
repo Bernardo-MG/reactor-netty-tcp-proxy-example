@@ -15,5 +15,16 @@
                 Proxying based on connection, not on request.
             </action>
         </release>
+        <release version="1.0.2" date="2023-03-06" description="Using Netty logging">
+            <action dev="bmg" type="add">
+                Using Netty logging.
+            </action>
+            <action dev="bmg" type="add">
+                Added debug option.
+            </action>
+            <action dev="bmg" type="update">
+                Cleaned up code.
+            </action>
+        </release>
     </body>
 </document>

@@ -26,6 +26,7 @@ package com.bernardomg.example.netty.proxy.server.bridge;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
 import reactor.netty.Connection;
@@ -41,6 +42,7 @@ import reactor.netty.Connection;
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
+@Slf4j
 public final class BidirectionalConnectionBridge implements ConnectionBridge {
 
     /**
@@ -65,7 +67,10 @@ public final class BidirectionalConnectionBridge implements ConnectionBridge {
         final Disposable reqDispose;
         final Disposable respDispose;
 
+        log.debug("Binding request. Server inbound -> client outbound");
         reqDispose = requestConnectionBridge.bridge(clientConn, serverConn);
+
+        log.debug("Binding response. Client inbound -> server outbound");
         respDispose = responseConnectionBridge.bridge(clientConn, serverConn);
 
         return Disposables.composite(reqDispose, respDispose);

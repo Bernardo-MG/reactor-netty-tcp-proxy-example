@@ -18,7 +18,7 @@
 
    <Loggers>
       <!-- Application log -->
-      <Logger name="com.bernardomg.example" level="debug" additivity="false">
+      <Logger name="com.bernardomg.example" level="error" additivity="false">
          <AppenderRef ref="console" />
       </Logger>
 
@@ -26,7 +26,7 @@
       <Logger name="io.netty" level="error" additivity="false">
          <AppenderRef ref="console"/>
       </Logger>
-      <Logger name="reactor.netty.tcp" level="debug" additivity="false">
+      <Logger name="reactor.netty.tcp" level="error" additivity="false">
          <AppenderRef ref="console"/>
       </Logger>
 

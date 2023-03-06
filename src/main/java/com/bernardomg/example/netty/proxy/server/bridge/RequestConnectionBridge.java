@@ -26,6 +26,8 @@ package com.bernardomg.example.netty.proxy.server.bridge;
 
 import java.util.Objects;
 
+import org.reactivestreams.Publisher;
+
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,12 @@ import reactor.netty.Connection;
 /**
  * Bridge for binding requests. When the server receives a request through its inbound, this is redirected to the client
  * outbound.
+ * <ul>
+ * <li>Server inbound is redirected to client outbound</li>
+ * </ul>
+ * <h2>Listener</h2>
+ * <p>
+ * Additionally, the bridged connection will send requests to a {@link ProxyListener}.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
@@ -44,10 +52,16 @@ import reactor.netty.Connection;
 public final class RequestConnectionBridge implements ConnectionBridge {
 
     /**
-     * Proxy listener. Extension hook which allows reacting to the proxy events.
+     * Proxy listener. Will received the requests.
      */
     private final ProxyListener listener;
 
+    /**
+     * Constructs a bridge with the received listener.
+     *
+     * @param lst
+     *            proxy listener for the requests
+     */
     public RequestConnectionBridge(final ProxyListener lst) {
         super();
 
@@ -56,55 +70,43 @@ public final class RequestConnectionBridge implements ConnectionBridge {
 
     @Override
     public final Disposable bridge(final Connection clientConn, final Connection serverConn) {
-        log.debug("Binding request. Server inbound -> client outbound");
-
         return serverConn
             // Receive
             .inbound()
             .receive()
             // Transform to byte array
             .asByteArray()
-            // Logging
-            .doOnCancel(() -> log.debug("Proxy server cancel"))
-            .doOnComplete(() -> log.debug("Proxy server complete"))
-            .doOnRequest((l) -> log.debug("Proxy server request"))
-            .doOnEach((s) -> log.debug("Proxy server each"))
-            .doOnNext((n) -> log.debug("Proxy server next"))
             // Process
             .flatMap(next -> {
-                log.debug("Handling request");
+                final Publisher<byte[]> dataStream;
 
-                // Sends the request to the listener
-
-                log.debug("Server received request: {}", next);
+                // Sends message to the listener
                 listener.onServerReceive(next);
 
                 if (clientConn.isDisposed()) {
                     log.error("Client connection already disposed");
                 }
 
-                return clientConn.outbound()
-                    .sendByteArray(Mono.just(next)
-                        .doOnNext((n) -> {
-                            log.debug("Client sends request: {}", n);
+                dataStream = buildStream(next);
 
-                            listener.onClientSend(n);
-                        }))
-                    .then();
+                return clientConn.outbound()
+                    .sendByteArray(dataStream);
             })
-            .doOnError(this::handleError)
             // Subscribe to run
             .subscribe();
     }
 
     /**
-     * Error handler which sends errors to the log.
+     * Builds a data stream for the received bytes.
      *
-     * @param ex
-     *            exception to log
+     * @param data
+     *            byte array for the stream
+     * @return data stream from the received bytes
      */
-    private final void handleError(final Throwable ex) {
-        log.error(ex.getLocalizedMessage(), ex);
+    private final Publisher<byte[]> buildStream(final byte[] data) {
+        return Mono.just(data)
+            .flux()
+            .doOnNext(listener::onClientSend);
     }
 
 }

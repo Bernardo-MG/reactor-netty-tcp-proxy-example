@@ -24,7 +24,7 @@
 
 package com.bernardomg.example.netty.proxy.cli;
 
-import com.bernardomg.example.netty.proxy.cli.command.StartTcpProxyCommand;
+import com.bernardomg.example.netty.proxy.cli.command.StartProxyCommand;
 import com.bernardomg.example.netty.proxy.cli.version.ManifestVersionProvider;
 
 import picocli.CommandLine.Command;
@@ -35,7 +35,7 @@ import picocli.CommandLine.Command;
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-@Command(description = "Proxy", subcommands = { StartTcpProxyCommand.class }, mixinStandardHelpOptions = true,
+@Command(description = "Proxy", subcommands = { StartProxyCommand.class }, mixinStandardHelpOptions = true,
         versionProvider = ManifestVersionProvider.class)
 public class ProxyMenu {
 
