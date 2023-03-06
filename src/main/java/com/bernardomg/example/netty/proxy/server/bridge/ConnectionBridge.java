@@ -28,7 +28,7 @@ import reactor.core.Disposable;
 import reactor.netty.Connection;
 
 /**
- * Connection bridge. Joins the client and server connections for proxying.
+ * Connection bridge. Redirects connections between the server and a client.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *

@@ -38,6 +38,12 @@ import reactor.netty.Connection;
 /**
  * Bridge for binding requests. When the server receives a request through its inbound, this is redirected to the client
  * outbound.
+ * <ul>
+ * <li>Server inbound is redirected to client outbound</li>
+ * </ul>
+ * <h1>Listener</h1>
+ * <p>
+ * Additionally, the bridged connection will send requests to a {@link ProxyListener}.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
@@ -46,10 +52,16 @@ import reactor.netty.Connection;
 public final class RequestConnectionBridge implements ConnectionBridge {
 
     /**
-     * Proxy listener. Extension hook which allows reacting to the proxy events.
+     * Proxy listener. Will received the requests.
      */
     private final ProxyListener listener;
 
+    /**
+     * Constructs a bridge with the received listener.
+     *
+     * @param lst
+     *            proxy listener for the requests
+     */
     public RequestConnectionBridge(final ProxyListener lst) {
         super();
 
@@ -84,8 +96,15 @@ public final class RequestConnectionBridge implements ConnectionBridge {
             .subscribe();
     }
 
-    private final Publisher<byte[]> buildStream(final byte[] next) {
-        return Mono.just(next)
+    /**
+     * Builds a data stream for the received bytes.
+     *
+     * @param data
+     *            byte array for the stream
+     * @return data stream from the received bytes
+     */
+    private final Publisher<byte[]> buildStream(final byte[] data) {
+        return Mono.just(data)
             .flux()
             .doOnNext(listener::onClientSend);
     }

@@ -41,13 +41,16 @@ import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
 /**
- * Netty based TCP server. Will connect a Reactor Netty server and client, to redirect messages between the local port
- * and the remote URL being proxied.
+ * Netty based TCP proxy. With the user of a Reactor Netty server and clients, it will redirect all connections to the
+ * target URL.
+ * <h1>Connection bridging</h1>
  * <p>
- * The client and server send messages between each other. The server will receive any request, and then redirect them
- * to the client, which sends these requests to the proxied URL. This is done backwards for responses.
+ * When the server starts a new connection, then a new client is started for said server connection. They are connected
+ * through a {@link BidirectionalConnectionBridge}, which will redirect request and response streams
+ * between them. So requests go this way: {@code listened port -> Netty server -> Netty client -> proxied URL}, and
+ * responses work in reverse.
  * <p>
- * So requests go this way: {@code port -> Netty server -> Netty client -> proxied URL}, and responses work in reverse.
+ * This also means than for each proxy server there may exist multiple clients. As many as current requests.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
@@ -92,6 +95,18 @@ public final class ReactorNettyTcpProxyServer implements Server {
     @NonNull
     private Boolean                wiretap = false;
 
+    /**
+     * Constructs a proxy server redirecting the received port to the target URL.
+     *
+     * @param prt
+     *            port to listen to
+     * @param trgtHost
+     *            target host
+     * @param trgtPort
+     *            target port
+     * @param lst
+     *            proxy listener
+     */
     public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
             final ProxyListener lst) {
         super();
