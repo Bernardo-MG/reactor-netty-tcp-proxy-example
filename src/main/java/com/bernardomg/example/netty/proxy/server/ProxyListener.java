@@ -38,7 +38,7 @@ public interface ProxyListener {
      * @param message
      *            message received
      */
-    public void onRequest(final Object message);
+    public void onRequest(final byte[] message);
 
     /**
      * Reacts to a response message being received.
@@ -46,7 +46,7 @@ public interface ProxyListener {
      * @param message
      *            message sent
      */
-    public void onResponse(final Object message);
+    public void onResponse(final byte[] message);
 
     /**
      * Reacts to the start event.
