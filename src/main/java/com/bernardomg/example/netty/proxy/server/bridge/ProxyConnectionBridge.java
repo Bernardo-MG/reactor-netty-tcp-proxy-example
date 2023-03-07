@@ -24,6 +24,7 @@
 
 package com.bernardomg.example.netty.proxy.server.bridge;
 
+import java.util.Objects;
 import java.util.function.UnaryOperator;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
@@ -59,7 +60,7 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
     public ProxyConnectionBridge(final ProxyListener lstn) {
         super();
 
-        listener = lstn;
+        listener = Objects.requireNonNull(lstn);
     }
 
     @Override
