@@ -27,12 +27,12 @@ public final class ListenerProxyObserver implements ProxyObserver {
 
     @Override
     public final void setRequestFlux(final Flux<byte[]> flux) {
-        flux.doOnNext(listener::onServerReceive);
+        flux.doOnNext(listener::onRequest);
     }
 
     @Override
     public final void setResponseFlux(final Flux<byte[]> flux) {
-        flux.doOnNext(listener::onClientSend);
+        flux.doOnNext(listener::onResponse);
     }
 
 }
