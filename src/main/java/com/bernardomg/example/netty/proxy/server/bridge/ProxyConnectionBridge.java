@@ -27,8 +27,6 @@ package com.bernardomg.example.netty.proxy.server.bridge;
 import java.util.function.UnaryOperator;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
-import com.bernardomg.example.netty.proxy.server.bridge.decorator.ListenerRequestDecorator;
-import com.bernardomg.example.netty.proxy.server.bridge.decorator.ListenerResponseDecorator;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
@@ -53,15 +51,15 @@ import reactor.netty.Connection;
 @Slf4j
 public final class ProxyConnectionBridge implements ConnectionBridge {
 
-    private final UnaryOperator<Flux<byte[]>> requestDecorator;
+    /**
+     * Proxy listener. Will received the requests.
+     */
+    private final ProxyListener listener;
 
-    private final UnaryOperator<Flux<byte[]>> responseDecorator;
-
-    public ProxyConnectionBridge(final ProxyListener listener) {
+    public ProxyConnectionBridge(final ProxyListener lstn) {
         super();
 
-        requestDecorator = new ListenerRequestDecorator(listener);
-        responseDecorator = new ListenerResponseDecorator(listener);
+        listener = lstn;
     }
 
     @Override
@@ -70,10 +68,10 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
         final Disposable respDispose;
 
         log.debug("Binding request. Server inbound -> client outbound");
-        reqDispose = decoratedBridge(server, client, requestDecorator);
+        reqDispose = decoratedBridge(server, client, this::listenToRequest);
 
         log.debug("Binding response. Client inbound -> server outbound");
-        respDispose = decoratedBridge(client, server, responseDecorator);
+        respDispose = decoratedBridge(client, server, this::listenToResponse);
 
         // Combines disposables
         return Disposables.composite(reqDispose, respDispose);
@@ -114,6 +112,28 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
             })
             // Subscribe to run
             .subscribe();
+    }
+
+    /**
+     * Decorates the flux by adding the listener, which will react to requests.
+     *
+     * @param flux
+     *            flux to decorate
+     * @return the decorated flux
+     */
+    private final Flux<byte[]> listenToRequest(final Flux<byte[]> flux) {
+        return flux.doOnNext(listener::onRequest);
+    }
+
+    /**
+     * Decorates the flux by adding the listener, which will react to responses.
+     *
+     * @param flux
+     *            flux to decorate
+     * @return the decorated flux
+     */
+    private final Flux<byte[]> listenToResponse(final Flux<byte[]> flux) {
+        return flux.doOnNext(listener::onResponse);
     }
 
 }
