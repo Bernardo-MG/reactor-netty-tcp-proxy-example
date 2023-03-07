@@ -32,11 +32,11 @@ import reactor.core.Disposables;
 import reactor.netty.Connection;
 
 /**
- * Bridge for binding both requests and responses. Is composed of request and response bridges, which will take care of
- * the bridging:
+ * Bridges requests on both directions, building a flux for requests and another for responses. It is actually composed
+ * of two other bridges, which will take care of the job:
  * <ul>
- * <li>Server inbound is redirected to client outbound</li>
- * <li>Client inbound is redirected to server outbound</li>
+ * <li>{@link RequestConnectionBridge}</li>
+ * <li>{@link ResponseConnectionBridge}</li>
  * </ul>
  *
  * @author Bernardo Mart&iacute;nez Garrido

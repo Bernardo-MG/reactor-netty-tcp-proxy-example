@@ -36,11 +36,8 @@ import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 
 /**
- * Bridge for binding requests. When the server receives a request through its inbound, this is redirected to the client
- * outbound.
- * <ul>
- * <li>Server inbound is redirected to client outbound</li>
- * </ul>
+ * Bridges the proxy server requests to the proxy client, creating a single request flux. This means redirecting the
+ * proxy server inbound to the proxy client outbound.
  * <h2>Listener</h2>
  * <p>
  * Additionally, the bridged connection will send requests to a {@link ProxyListener}.
