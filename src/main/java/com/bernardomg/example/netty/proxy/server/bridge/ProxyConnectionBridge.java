@@ -45,8 +45,17 @@ import reactor.netty.NettyOutbound;
  * <li>Request flux: {@code server inbound -> client outbound}</li>
  * <li>Response flux: {@code client inbound -> server outbound}</li>
  * </ul>
+ * <h2>Disposing the bridge</h2>
  * <p>
- * Both are disposed with the {@code Disposable} returned by {@link #bridge(Connection, Connection) bridge}.
+ * Once the bridging is done both connections will share a single lifecycle. Actually, there will be a single lifecycle,
+ * the server connection's. This will define when the other components are created and destroyed.
+ * <p>
+ * When the server connection is disposed of, then the following steps are taken:
+ * <ul>
+ * <li>Request flux is disposed of</li>
+ * <li>Response flux is disposed of</li>
+ * <li>Client channel is closed</li>
+ * </ul>
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
