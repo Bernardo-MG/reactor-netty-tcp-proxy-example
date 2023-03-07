@@ -186,7 +186,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .port(port)
             .bindNow()
             // Listen to events
-            .onDispose(() -> listener.onStop());
+            .onDispose(listener::onStop);
     }
 
     /**

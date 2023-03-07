@@ -108,9 +108,7 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
 
         return decorated
             // proxy
-            .concatMap(next -> {
-                return outbound.sendByteArray(Mono.just(next));
-            })
+            .concatMap(next -> outbound.sendByteArray(Mono.just(next)))
             // Subscribe to run
             .subscribe();
     }
