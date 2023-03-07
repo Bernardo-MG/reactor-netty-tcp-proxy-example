@@ -133,7 +133,18 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         log.debug("Binding to port {}", port);
 
-        server = connectoToServer();
+        server = TcpServer.create()
+            // Bridge connection
+            .doOnConnection(this::bridgeConnections)
+            // Listen to events
+            .doOnBind(c -> listener.onStart())
+            // Wiretap
+            .wiretap(wiretap)
+            // Bind to port
+            .port(port)
+            .bindNow()
+            // Listen to events
+            .onDispose(listener::onStop);
 
         log.trace("Started server");
     }
@@ -157,7 +168,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
      */
     private final void bridgeConnections(final Connection serverConn) {
         // Connect to client, and react when connection becomes available
-        connectToClient().subscribe((clientConn) -> {
+        startClient().subscribe((clientConn) -> {
             final Disposable bridgeDispose;
 
             log.debug("Bridging connection with {}", bridge);
@@ -170,32 +181,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
     }
 
     /**
-     * Starts a server connection and returns a disposable.
-     *
-     * @return disposable for disposing the server
-     */
-    private final DisposableChannel connectoToServer() {
-        return TcpServer.create()
-            // Bridge connection
-            .doOnConnection(this::bridgeConnections)
-            // Listen to events
-            .doOnBind(c -> listener.onStart())
-            // Wiretap
-            .wiretap(wiretap)
-            // Bind to port
-            .port(port)
-            .bindNow()
-            // Listen to events
-            .onDispose(listener::onStop);
-    }
-
-    /**
-     * Starts a client connection to the target URL, and returns a {@code Mono} to watch for. Once the client has
-     * connected the {@code Mono} will contain the connection.
+     * Starts a client instance to the target URL, and returns a {@code Mono} to watch for the connection.
      *
      * @return {@code Mono} for the client connection
      */
-    private final Mono<? extends Connection> connectToClient() {
+    private final Mono<? extends Connection> startClient() {
         log.trace("Starting proxy client");
 
         log.debug("Proxy client connecting to {}:{}", targetHost, targetPort);
