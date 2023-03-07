@@ -33,10 +33,10 @@ import reactor.netty.Connection;
 
 /**
  * Bridges requests on both directions, building a flux for requests and another for responses. It is actually composed
- * of two other bridges, which will take care of the job:
+ * of two instances of {@link ProxyConnectionBridge}. This will bridge inbound and outbound fluxes to build two fluxes:
  * <ul>
- * <li>{@link RequestConnectionBridge}</li>
- * <li>{@link ResponseConnectionBridge}</li>
+ * <li>Request flux: {@code server inbound -> client outbound}</li>
+ * <li>Response flux: {@code client inbound -> server outbound}</li>
  * </ul>
  *
  * @author Bernardo Mart&iacute;nez Garrido
@@ -58,8 +58,8 @@ public final class BidirectionalConnectionBridge implements ConnectionBridge {
     public BidirectionalConnectionBridge(final ProxyDecorator obsv) {
         super();
 
-        requestConnectionBridge = new RequestConnectionBridge(obsv);
-        responseConnectionBridge = new ResponseConnectionBridge(obsv);
+        requestConnectionBridge = new ProxyConnectionBridge(obsv::applyToRequest);
+        responseConnectionBridge = new ProxyConnectionBridge(obsv::applyToResponse);
     }
 
     @Override
@@ -68,7 +68,7 @@ public final class BidirectionalConnectionBridge implements ConnectionBridge {
         final Disposable respDispose;
 
         log.debug("Binding request. Server inbound -> client outbound");
-        reqDispose = requestConnectionBridge.bridge(clientConn, serverConn);
+        reqDispose = requestConnectionBridge.bridge(serverConn, clientConn);
 
         log.debug("Binding response. Client inbound -> server outbound");
         respDispose = responseConnectionBridge.bridge(clientConn, serverConn);
