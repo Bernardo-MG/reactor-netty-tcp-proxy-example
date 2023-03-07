@@ -35,6 +35,8 @@ import reactor.core.Disposables;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
+import reactor.netty.NettyInbound;
+import reactor.netty.NettyOutbound;
 
 /**
  * Bridges connections to proxy requests and responses as if the proxy server was actually the target server. The end
@@ -69,10 +71,10 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
         final Disposable respDispose;
 
         log.debug("Binding request. Server inbound -> client outbound");
-        reqDispose = decoratedBridge(server, client, this::listenToRequest);
+        reqDispose = decoratedBridge(server.inbound(), client.outbound(), this::listenToRequest);
 
         log.debug("Binding response. Client inbound -> server outbound");
-        respDispose = decoratedBridge(client, server, this::listenToResponse);
+        respDispose = decoratedBridge(client.inbound(), server.outbound(), this::listenToResponse);
 
         // Combines disposables
         return Disposables.composite(reqDispose, respDispose);
@@ -90,14 +92,13 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
      *            decorator to apply
      * @return disposable to get rid of the bridge flux
      */
-    private final Disposable decoratedBridge(final Connection inbound, final Connection outbound,
+    private final Disposable decoratedBridge(final NettyInbound inbound, final NettyOutbound outbound,
             final UnaryOperator<Flux<byte[]>> decorator) {
         final Flux<byte[]> flux;
         final Flux<byte[]> decorated;
 
         flux = inbound
             // Receive
-            .inbound()
             .receive()
             // Transform to byte array
             .asByteArray();
@@ -108,8 +109,7 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
         return decorated
             // proxy
             .flatMap(next -> {
-                return outbound.outbound()
-                    .sendByteArray(Mono.just(next));
+                return outbound.sendByteArray(Mono.just(next));
             })
             // Subscribe to run
             .subscribe();
