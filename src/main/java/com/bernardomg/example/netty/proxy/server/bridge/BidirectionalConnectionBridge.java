@@ -73,6 +73,7 @@ public final class BidirectionalConnectionBridge implements ConnectionBridge {
         log.debug("Binding response. Client inbound -> server outbound");
         respDispose = responseConnectionBridge.bridge(clientConn, serverConn);
 
+        // Combines disposables
         return Disposables.composite(reqDispose, respDispose);
     }
 

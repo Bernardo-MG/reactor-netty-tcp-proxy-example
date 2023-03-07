@@ -63,6 +63,7 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
     @Override
     public final Disposable bridge(final Connection inbound, final Connection outbound) {
         final Flux<byte[]> flux;
+        final Flux<byte[]> decorated;
 
         flux = inbound
             // Receive
@@ -71,7 +72,10 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
             // Transform to byte array
             .asByteArray();
 
-        return decorator.apply(flux)
+        // Applies decorator
+        decorated = decorator.apply(flux);
+
+        return decorated
             // proxy
             .flatMap(next -> {
                 return outbound.outbound()
