@@ -24,7 +24,7 @@
 
 package com.bernardomg.example.netty.proxy.server.bridge;
 
-import com.bernardomg.example.netty.proxy.server.observer.ProxyObserver;
+import com.bernardomg.example.netty.proxy.server.bridge.decorator.ProxyDecorator;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
@@ -55,7 +55,7 @@ public final class BidirectionalConnectionBridge implements ConnectionBridge {
      */
     private final ConnectionBridge responseConnectionBridge;
 
-    public BidirectionalConnectionBridge(final ProxyObserver obsv) {
+    public BidirectionalConnectionBridge(final ProxyDecorator obsv) {
         super();
 
         requestConnectionBridge = new RequestConnectionBridge(obsv);

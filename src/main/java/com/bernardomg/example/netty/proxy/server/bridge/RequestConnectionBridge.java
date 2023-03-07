@@ -27,7 +27,7 @@ package com.bernardomg.example.netty.proxy.server.bridge;
 import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
-import com.bernardomg.example.netty.proxy.server.observer.ProxyObserver;
+import com.bernardomg.example.netty.proxy.server.bridge.decorator.ProxyDecorator;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -46,18 +46,18 @@ import reactor.netty.Connection;
  */
 public final class RequestConnectionBridge implements ConnectionBridge {
 
-    private final ProxyObserver observer;
+    private final ProxyDecorator decorator;
 
     /**
      * Constructs a bridge with the received listener.
      *
-     * @param obsv
-     *            proxy observer
+     * @param dec
+     *            proxy decorator
      */
-    public RequestConnectionBridge(final ProxyObserver obsv) {
+    public RequestConnectionBridge(final ProxyDecorator dec) {
         super();
 
-        observer = Objects.requireNonNull(obsv);
+        decorator = Objects.requireNonNull(dec);
     }
 
     @Override
@@ -71,9 +71,7 @@ public final class RequestConnectionBridge implements ConnectionBridge {
             // Transform to byte array
             .asByteArray();
 
-        observer.setRequestFlux(flux);
-
-        return flux
+        return decorator.applyToRequest(flux)
             // proxy
             .flatMap(next -> {
                 return clientConn.outbound()

@@ -28,8 +28,8 @@ import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.bridge.BidirectionalConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
-import com.bernardomg.example.netty.proxy.server.observer.ListenerProxyObserver;
-import com.bernardomg.example.netty.proxy.server.observer.ProxyObserver;
+import com.bernardomg.example.netty.proxy.server.bridge.decorator.ListenerProxyDecorator;
+import com.bernardomg.example.netty.proxy.server.bridge.decorator.ProxyDecorator;
 
 import lombok.NonNull;
 import lombok.Setter;
@@ -118,9 +118,9 @@ public final class ReactorNettyTcpProxyServer implements Server {
         targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
 
-        final ProxyObserver observer;
+        final ProxyDecorator observer;
 
-        observer = new ListenerProxyObserver(listener);
+        observer = new ListenerProxyDecorator(listener);
         bridge = new BidirectionalConnectionBridge(observer);
     }
 
