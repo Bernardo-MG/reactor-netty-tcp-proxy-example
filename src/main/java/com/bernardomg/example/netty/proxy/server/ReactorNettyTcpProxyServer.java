@@ -120,7 +120,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         final ProxyDecorator observer;
 
         observer = new ListenerProxyDecorator(listener);
-        bridge = new BidirectionalConnectionBridge(observer);
+        bridge = new BidirectionalConnectionBridge(observer::applyToRequest, observer::applyToResponse);
     }
 
     @Override

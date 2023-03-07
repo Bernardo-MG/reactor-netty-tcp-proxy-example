@@ -24,11 +24,12 @@
 
 package com.bernardomg.example.netty.proxy.server.bridge;
 
-import com.bernardomg.example.netty.proxy.server.bridge.decorator.ProxyDecorator;
+import java.util.function.UnaryOperator;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
+import reactor.core.publisher.Flux;
 import reactor.netty.Connection;
 
 /**
@@ -55,11 +56,12 @@ public final class BidirectionalConnectionBridge implements ConnectionBridge {
      */
     private final ConnectionBridge responseConnectionBridge;
 
-    public BidirectionalConnectionBridge(final ProxyDecorator obsv) {
+    public BidirectionalConnectionBridge(final UnaryOperator<Flux<byte[]>> requestDecorator,
+            final UnaryOperator<Flux<byte[]>> responseDecorator) {
         super();
 
-        requestConnectionBridge = new ProxyConnectionBridge(obsv::applyToRequest);
-        responseConnectionBridge = new ProxyConnectionBridge(obsv::applyToResponse);
+        requestConnectionBridge = new ProxyConnectionBridge(requestDecorator);
+        responseConnectionBridge = new ProxyConnectionBridge(responseDecorator);
     }
 
     @Override
