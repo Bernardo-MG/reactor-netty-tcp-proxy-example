@@ -26,8 +26,8 @@ package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 
-import com.bernardomg.example.netty.proxy.server.bridge.BidirectionalConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
+import com.bernardomg.example.netty.proxy.server.bridge.ProxyConnectionBridge;
 
 import lombok.NonNull;
 import lombok.Setter;
@@ -45,9 +45,8 @@ import reactor.netty.tcp.TcpServer;
  * <h2>Connection bridging</h2>
  * <p>
  * When the server starts a new connection, then a new client is started for said server connection. They are connected
- * through a {@link BidirectionalConnectionBridge}, which will redirect request and response streams between them. So
- * requests go this way: {@code listened port -> Netty server -> Netty client -> proxied URL}, and responses work in
- * reverse.
+ * through a {@link ProxyConnectionBridge}, which will redirect request and response streams between them. So requests
+ * go this way: {@code listened port -> Netty server -> Netty client -> proxied URL}, and responses work in reverse.
  * <p>
  * This also means than for each proxy server there may exist multiple clients. As many as current requests.
  *
@@ -114,7 +113,8 @@ public final class ReactorNettyTcpProxyServer implements Server {
         targetHost = Objects.requireNonNull(trgtHost);
         targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
-        bridge = new BidirectionalConnectionBridge(listener);
+
+        bridge = new ProxyConnectionBridge(listener);
     }
 
     @Override
@@ -156,13 +156,13 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *            server connection
      */
     private final void bridgeConnections(final Connection serverConn) {
-        // Connect to client, and wait for connection to be available
+        // Connect to client, and react when connection becomes available
         connectToClient().subscribe((clientConn) -> {
             final Disposable bridgeDispose;
 
             log.debug("Bridging connection with {}", bridge);
 
-            bridgeDispose = bridge.bridge(clientConn, serverConn);
+            bridgeDispose = bridge.bridge(serverConn, clientConn);
 
             // When the server connection is disposed, so is the bridging
             serverConn.onDispose(bridgeDispose);
@@ -186,7 +186,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .port(port)
             .bindNow()
             // Listen to events
-            .onDispose(() -> listener.onStop());
+            .onDispose(listener::onStop);
     }
 
     /**

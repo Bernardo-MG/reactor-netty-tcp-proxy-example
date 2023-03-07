@@ -38,12 +38,12 @@ public interface ConnectionBridge {
     /**
      * Bridges both connections and returns a disposable, which allows getting rid of the background flux.
      *
-     * @param clientConn
-     *            client connection
-     * @param serverConn
-     *            server connection
-     * @return disposable to get rid of background flux
+     * @param left
+     *            left connection
+     * @param right
+     *            right connection
+     * @return disposable to clean up the connection bridge
      */
-    public Disposable bridge(final Connection clientConn, final Connection serverConn);
+    public Disposable bridge(final Connection left, final Connection right);
 
 }
