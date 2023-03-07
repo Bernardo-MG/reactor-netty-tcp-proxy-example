@@ -27,7 +27,6 @@ package com.bernardomg.example.netty.proxy.server;
 import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.bridge.BidirectionalConnectionBridge;
-import com.bernardomg.example.netty.proxy.server.bridge.BidirectionalListenerConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
 
 import lombok.NonNull;
@@ -116,7 +115,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
 
-        bridge = new BidirectionalListenerConnectionBridge(listener);
+        bridge = new BidirectionalConnectionBridge(listener);
     }
 
     @Override
