@@ -26,12 +26,11 @@ package com.bernardomg.example.netty.proxy.server.bridge;
 
 import java.util.Objects;
 
-import org.reactivestreams.Publisher;
-
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
+import com.bernardomg.example.netty.proxy.server.observer.ProxyObserver;
 
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 
@@ -45,49 +44,40 @@ import reactor.netty.Connection;
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-@Slf4j
 public final class ResponseConnectionBridge implements ConnectionBridge {
 
-    /**
-     * Proxy listener. Will received the responses.
-     */
-    private final ProxyListener listener;
+    private final ProxyObserver observer;
 
     /**
      * Constructs a bridge with the received listener.
      *
-     * @param lst
-     *            proxy listener for the responses
+     * @param obsv
+     *            proxy observer
      */
-    public ResponseConnectionBridge(final ProxyListener lst) {
+    public ResponseConnectionBridge(final ProxyObserver obsv) {
         super();
 
-        listener = Objects.requireNonNull(lst);
+        observer = Objects.requireNonNull(obsv);
     }
 
     @Override
     public final Disposable bridge(final Connection clientConn, final Connection serverConn) {
-        return clientConn
+        final Flux<byte[]> flux;
+
+        flux = clientConn
             // Receive
             .inbound()
             .receive()
             // Transform to byte array
-            .asByteArray()
-            // Process
+            .asByteArray();
+
+        observer.setResponseFlux(flux);
+
+        return flux
+            // proxy
             .flatMap(next -> {
-                final Publisher<byte[]> dataStream;
-
-                // Sends message to the listener
-                listener.onResponse(next);
-
-                if (serverConn.isDisposed()) {
-                    log.error("Server connection already disposed");
-                }
-
-                dataStream = Mono.just(next);
-
                 return serverConn.outbound()
-                    .sendByteArray(dataStream);
+                    .sendByteArray(Mono.just(next));
             })
             // Subscribe to run
             .subscribe();

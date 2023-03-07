@@ -1,3 +1,4 @@
+
 package com.bernardomg.example.netty.proxy.server.observer;
 
 import java.util.Objects;
