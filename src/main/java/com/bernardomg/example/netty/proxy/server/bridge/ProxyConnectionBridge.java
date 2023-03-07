@@ -27,19 +27,16 @@ package com.bernardomg.example.netty.proxy.server.bridge;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 
-import com.bernardomg.example.netty.proxy.server.ProxyListener;
-
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 
 /**
- * Bridges the proxy client responses to the proxy server, creating a single response flux. This means redirecting the
- * proxy client inbound to the proxy server outbound.
- * <h2>Listener</h2>
+ * Builds a proxy between two connections, using one as inbound and the other as outbound. Any data received by the
+ * inbound will be sent to the outbound. This will generate a flux, which is returned as a {@code Disposable}.
  * <p>
- * Additionally, the bridged connection will send responses to a {@link ProxyListener}.
+ * Additionally, it will apply a decorator to extend said proxied flux.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *

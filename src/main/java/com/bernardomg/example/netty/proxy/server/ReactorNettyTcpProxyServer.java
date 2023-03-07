@@ -164,7 +164,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
             log.debug("Bridging connection with {}", bridge);
 
-            bridgeDispose = bridge.bridge(clientConn, serverConn);
+            bridgeDispose = bridge.bridge(serverConn, clientConn);
 
             // When the server connection is disposed, so is the bridging
             serverConn.onDispose(bridgeDispose);

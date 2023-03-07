@@ -63,15 +63,15 @@ public final class BidirectionalConnectionBridge implements ConnectionBridge {
     }
 
     @Override
-    public final Disposable bridge(final Connection clientConn, final Connection serverConn) {
+    public final Disposable bridge(final Connection server, final Connection client) {
         final Disposable reqDispose;
         final Disposable respDispose;
 
         log.debug("Binding request. Server inbound -> client outbound");
-        reqDispose = requestConnectionBridge.bridge(serverConn, clientConn);
+        reqDispose = requestConnectionBridge.bridge(server, client);
 
         log.debug("Binding response. Client inbound -> server outbound");
-        respDispose = responseConnectionBridge.bridge(clientConn, serverConn);
+        respDispose = responseConnectionBridge.bridge(client, server);
 
         // Combines disposables
         return Disposables.composite(reqDispose, respDispose);
