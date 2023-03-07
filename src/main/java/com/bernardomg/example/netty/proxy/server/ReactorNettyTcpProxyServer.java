@@ -25,16 +25,18 @@
 package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 import com.bernardomg.example.netty.proxy.server.bridge.BidirectionalConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
-import com.bernardomg.example.netty.proxy.server.bridge.decorator.ListenerProxyDecorator;
-import com.bernardomg.example.netty.proxy.server.bridge.decorator.ProxyDecorator;
+import com.bernardomg.example.netty.proxy.server.bridge.decorator.ListenerRequestDecorator;
+import com.bernardomg.example.netty.proxy.server.bridge.decorator.ListenerResponseDecorator;
 
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.DisposableChannel;
@@ -117,10 +119,13 @@ public final class ReactorNettyTcpProxyServer implements Server {
         targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
 
-        final ProxyDecorator observer;
+        final UnaryOperator<Flux<byte[]>> requestDecorator;
+        final UnaryOperator<Flux<byte[]>> responseDecorator;
 
-        observer = new ListenerProxyDecorator(listener);
-        bridge = new BidirectionalConnectionBridge(observer::applyToRequest, observer::applyToResponse);
+        requestDecorator = new ListenerRequestDecorator(listener);
+        responseDecorator = new ListenerResponseDecorator(listener);
+
+        bridge = new BidirectionalConnectionBridge(requestDecorator, responseDecorator);
     }
 
     @Override

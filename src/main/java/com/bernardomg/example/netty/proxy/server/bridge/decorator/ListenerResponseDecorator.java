@@ -24,18 +24,41 @@
 
 package com.bernardomg.example.netty.proxy.server.bridge.decorator;
 
+import java.util.Objects;
+import java.util.function.UnaryOperator;
+
+import com.bernardomg.example.netty.proxy.server.ProxyListener;
+
 import reactor.core.publisher.Flux;
 
 /**
- * Extends the proxy functionality. Received the proxied fluxes and extends them as needed.
+ * Extends the proxy fluxes by calling a {@link ProxyListener} when requests or response are received.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-public interface ProxyDecorator {
+public final class ListenerResponseDecorator implements UnaryOperator<Flux<byte[]>> {
 
-    public Flux<byte[]> applyToRequest(final Flux<byte[]> flux);
+    /**
+     * Proxy listener. Will received the requests.
+     */
+    private final ProxyListener listener;
 
-    public Flux<byte[]> applyToResponse(final Flux<byte[]> flux);
+    /**
+     * Constructs an observer with the received listener.
+     *
+     * @param lst
+     *            proxy listener for the requests
+     */
+    public ListenerResponseDecorator(final ProxyListener lst) {
+        super();
+
+        listener = Objects.requireNonNull(lst);
+    }
+
+    @Override
+    public final Flux<byte[]> apply(final Flux<byte[]> flux) {
+        return flux.doOnNext(listener::onResponse);
+    }
 
 }
