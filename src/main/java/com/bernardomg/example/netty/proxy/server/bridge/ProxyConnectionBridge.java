@@ -24,41 +24,75 @@
 
 package com.bernardomg.example.netty.proxy.server.bridge;
 
-import java.util.Objects;
 import java.util.function.UnaryOperator;
 
+import com.bernardomg.example.netty.proxy.server.ProxyListener;
+import com.bernardomg.example.netty.proxy.server.bridge.decorator.ListenerRequestDecorator;
+import com.bernardomg.example.netty.proxy.server.bridge.decorator.ListenerResponseDecorator;
+
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
+import reactor.core.Disposables;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 
 /**
- * Builds a proxy between two connections, using one as inbound and the other as outbound. Any data received by the
- * inbound will be sent to the outbound. This will generate a flux, which is returned as a {@code Disposable}.
+ * Bridges connections to proxy requests and responses as if the proxy server was actually the target server. The end
+ * result is that it builds two fluxes:
+ * <ul>
+ * <li>Request flux: {@code server inbound -> client outbound}</li>
+ * <li>Response flux: {@code client inbound -> server outbound}</li>
+ * </ul>
  * <p>
- * Additionally, it will apply a decorator to extend said proxied flux.
+ * Both are disposed with the {@code Disposable} returned by {@link #bridge(Connection, Connection) bridge}.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
+@Slf4j
 public final class ProxyConnectionBridge implements ConnectionBridge {
 
-    private final UnaryOperator<Flux<byte[]>> decorator;
+    private final UnaryOperator<Flux<byte[]>> requestDecorator;
 
-    /**
-     * Constructs a bridge with the received listener.
-     *
-     * @param dec
-     *            flux decorator
-     */
-    public ProxyConnectionBridge(final UnaryOperator<Flux<byte[]>> dec) {
+    private final UnaryOperator<Flux<byte[]>> responseDecorator;
+
+    public ProxyConnectionBridge(final ProxyListener listener) {
         super();
 
-        decorator = Objects.requireNonNull(dec);
+        requestDecorator = new ListenerRequestDecorator(listener);
+        responseDecorator = new ListenerResponseDecorator(listener);
     }
 
     @Override
-    public final Disposable bridge(final Connection inbound, final Connection outbound) {
+    public final Disposable bridge(final Connection server, final Connection client) {
+        final Disposable reqDispose;
+        final Disposable respDispose;
+
+        log.debug("Binding request. Server inbound -> client outbound");
+        reqDispose = decoratedBridge(server, client, requestDecorator);
+
+        log.debug("Binding response. Client inbound -> server outbound");
+        respDispose = decoratedBridge(client, server, responseDecorator);
+
+        // Combines disposables
+        return Disposables.composite(reqDispose, respDispose);
+    }
+
+    /**
+     * Bridges the connections, adding the decorator. This builds a flux which sends messages in the direction
+     * {@code inbound -> outbound}.
+     *
+     * @param inbound
+     *            source connection
+     * @param outbound
+     *            targer connection
+     * @param decorator
+     *            decorator to apply
+     * @return disposable to get rid of the bridge flux
+     */
+    private final Disposable decoratedBridge(final Connection inbound, final Connection outbound,
+            final UnaryOperator<Flux<byte[]>> decorator) {
         final Flux<byte[]> flux;
         final Flux<byte[]> decorated;
 

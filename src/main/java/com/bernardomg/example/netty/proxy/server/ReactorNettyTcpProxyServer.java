@@ -26,8 +26,8 @@ package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 
-import com.bernardomg.example.netty.proxy.server.bridge.BidirectionalConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
+import com.bernardomg.example.netty.proxy.server.bridge.ProxyConnectionBridge;
 
 import lombok.NonNull;
 import lombok.Setter;
@@ -45,9 +45,8 @@ import reactor.netty.tcp.TcpServer;
  * <h2>Connection bridging</h2>
  * <p>
  * When the server starts a new connection, then a new client is started for said server connection. They are connected
- * through a {@link BidirectionalConnectionBridge}, which will redirect request and response streams between them. So
- * requests go this way: {@code listened port -> Netty server -> Netty client -> proxied URL}, and responses work in
- * reverse.
+ * through a {@link ProxyConnectionBridge}, which will redirect request and response streams between them. So requests
+ * go this way: {@code listened port -> Netty server -> Netty client -> proxied URL}, and responses work in reverse.
  * <p>
  * This also means than for each proxy server there may exist multiple clients. As many as current requests.
  *
@@ -115,7 +114,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
         targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
 
-        bridge = new BidirectionalConnectionBridge(listener);
+        bridge = new ProxyConnectionBridge(listener);
     }
 
     @Override

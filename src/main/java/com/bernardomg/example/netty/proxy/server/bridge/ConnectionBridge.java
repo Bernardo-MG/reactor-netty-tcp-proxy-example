@@ -42,7 +42,7 @@ public interface ConnectionBridge {
      *            left connection
      * @param right
      *            right connection
-     * @return disposable to get rid of background flux
+     * @return disposable to clean up the connection bridge
      */
     public Disposable bridge(final Connection left, final Connection right);
 
