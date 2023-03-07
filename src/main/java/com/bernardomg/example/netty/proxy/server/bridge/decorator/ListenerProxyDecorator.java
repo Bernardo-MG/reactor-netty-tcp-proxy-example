@@ -33,7 +33,7 @@ import reactor.core.publisher.Flux;
 /**
  * Extends the proxy fluxes by calling a {@link ProxyListener} when requests or response are received.
  *
- * @author bernardo.martinezg
+ * @author Bernardo Mart&iacute;nez Garrido
  *
  */
 public final class ListenerProxyDecorator implements ProxyDecorator {

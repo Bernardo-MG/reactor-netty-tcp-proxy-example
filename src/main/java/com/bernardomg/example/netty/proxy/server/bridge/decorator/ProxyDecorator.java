@@ -29,7 +29,7 @@ import reactor.core.publisher.Flux;
 /**
  * Extends the proxy functionality. Received the proxied fluxes and extends them as needed.
  *
- * @author bernardo.martinezg
+ * @author Bernardo Mart&iacute;nez Garrido
  *
  */
 public interface ProxyDecorator {
