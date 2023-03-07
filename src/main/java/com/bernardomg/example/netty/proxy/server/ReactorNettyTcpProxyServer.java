@@ -36,7 +36,6 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.DisposableChannel;
-import reactor.netty.DisposableServer;
 import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
@@ -124,8 +123,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
 
         log.debug("Binding to port {}", port);
 
-        listener.onStart();
-
         server = connectoToServer();
 
         server.onDispose()
@@ -170,15 +167,19 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *
      * @return disposable for disposing the server
      */
-    private final DisposableServer connectoToServer() {
+    private final DisposableChannel connectoToServer() {
         return TcpServer.create()
-            // Logs events
+            // Bridge connection
             .doOnConnection(this::bridgeConnections)
+            // Listen to events
+            .doOnBind(c -> listener.onStart())
             // Wiretap
             .wiretap(wiretap)
             // Bind to port
             .port(port)
-            .bindNow();
+            .bindNow()
+            // Listen to events
+            .onDispose(() -> listener.onStop());
     }
 
     /**
