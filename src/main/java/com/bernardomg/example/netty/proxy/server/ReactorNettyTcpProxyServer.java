@@ -32,7 +32,6 @@ import com.bernardomg.example.netty.proxy.server.bridge.ProxyConnectionBridge;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.DisposableChannel;
@@ -169,14 +168,9 @@ public final class ReactorNettyTcpProxyServer implements Server {
     private final void bridgeConnections(final Connection serverConn) {
         // Connect to client, and react when connection becomes available
         startClient().subscribe((clientConn) -> {
-            final Disposable bridgeDispose;
-
             log.debug("Bridging connection with {}", bridge);
 
-            bridgeDispose = bridge.bridge(serverConn, clientConn);
-
-            // When the server connection is disposed, so is the bridging
-            serverConn.onDispose(bridgeDispose);
+            bridge.bridge(serverConn, clientConn);
         });
     }
 

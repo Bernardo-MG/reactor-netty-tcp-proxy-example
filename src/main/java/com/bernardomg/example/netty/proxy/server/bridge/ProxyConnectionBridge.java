@@ -66,9 +66,10 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
     }
 
     @Override
-    public final Disposable bridge(final Connection server, final Connection client) {
+    public final void bridge(final Connection server, final Connection client) {
         final Disposable reqDispose;
         final Disposable respDispose;
+        final Disposable bridgeDispose;
 
         log.debug("Binding request. Server inbound -> client outbound");
         reqDispose = decoratedBridge(server.inbound(), client.outbound(), this::listenToRequest);
@@ -78,7 +79,10 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
 
         // Combines disposables
         // This includes closing the client channel
-        return Disposables.composite(reqDispose, respDispose, client.channel()::close);
+        bridgeDispose = Disposables.composite(reqDispose, respDispose, client.channel()::close);
+
+        // When the server connection is disposed, so is the bridging
+        server.onDispose(bridgeDispose);
     }
 
     /**

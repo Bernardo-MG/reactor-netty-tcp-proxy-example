@@ -24,7 +24,6 @@
 
 package com.bernardomg.example.netty.proxy.server.bridge;
 
-import reactor.core.Disposable;
 import reactor.netty.Connection;
 
 /**
@@ -36,14 +35,13 @@ import reactor.netty.Connection;
 public interface ConnectionBridge {
 
     /**
-     * Bridges both connections and returns a disposable, which allows getting rid of the background flux.
+     * Bridges both connections.
      *
-     * @param left
-     *            left connection
-     * @param right
-     *            right connection
-     * @return disposable to clean up the connection bridge
+     * @param server
+     *            server connection
+     * @param client
+     *            client connection
      */
-    public Disposable bridge(final Connection left, final Connection right);
+    public void bridge(final Connection server, final Connection client);
 
 }
