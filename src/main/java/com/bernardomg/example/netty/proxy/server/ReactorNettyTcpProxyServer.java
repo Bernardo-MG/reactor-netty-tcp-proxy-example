@@ -38,7 +38,6 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.DisposableChannel;
-import reactor.netty.DisposableServer;
 import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
@@ -125,17 +124,22 @@ public final class ReactorNettyTcpProxyServer implements Server {
     }
 
     @Override
+    public final void listen() {
+        log.trace("Starting server listening");
+
+        server.onDispose()
+            .block();
+
+        log.trace("Stopped server listening");
+    }
+
+    @Override
     public final void start() {
         log.trace("Starting server");
 
         log.debug("Binding to port {}", port);
 
-        listener.onStart();
-
         server = connectoToServer();
-
-        server.onDispose()
-            .block();
 
         log.trace("Started server");
     }
@@ -176,15 +180,19 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *
      * @return disposable for disposing the server
      */
-    private final DisposableServer connectoToServer() {
+    private final DisposableChannel connectoToServer() {
         return TcpServer.create()
-            // Logs events
+            // Bridge connection
             .doOnConnection(this::bridgeConnections)
+            // Listen to events
+            .doOnBind(c -> listener.onStart())
             // Wiretap
             .wiretap(wiretap)
             // Bind to port
             .port(port)
-            .bindNow();
+            .bindNow()
+            // Listen to events
+            .onDispose(() -> listener.onStop());
     }
 
     /**
