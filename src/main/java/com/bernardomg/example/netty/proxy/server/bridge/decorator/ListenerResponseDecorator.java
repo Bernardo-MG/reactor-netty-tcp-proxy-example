@@ -32,7 +32,8 @@ import com.bernardomg.example.netty.proxy.server.ProxyListener;
 import reactor.core.publisher.Flux;
 
 /**
- * Extends the proxy fluxes by calling a {@link ProxyListener} when requests or response are received.
+ * Extends the proxy fluxes by calling a {@link ProxyListener} when requests or response are received. Obviously, this
+ * should be applied to the response flux to work correctly.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
