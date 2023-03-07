@@ -118,15 +118,22 @@ public final class ReactorNettyTcpProxyServer implements Server {
     }
 
     @Override
+    public final void listen() {
+        log.trace("Starting server listening");
+
+        server.onDispose()
+            .block();
+
+        log.trace("Stopped server listening");
+    }
+
+    @Override
     public final void start() {
         log.trace("Starting server");
 
         log.debug("Binding to port {}", port);
 
         server = connectoToServer();
-
-        server.onDispose()
-            .block();
 
         log.trace("Started server");
     }
