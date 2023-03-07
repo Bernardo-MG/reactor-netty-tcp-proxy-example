@@ -85,9 +85,9 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
      * {@code inbound -> outbound}.
      *
      * @param inbound
-     *            source connection
+     *            source connection {@code NettyInbound}
      * @param outbound
-     *            targer connection
+     *            target connection {@code NettyOutbound}
      * @param decorator
      *            decorator to apply
      * @return disposable to get rid of the bridge flux
