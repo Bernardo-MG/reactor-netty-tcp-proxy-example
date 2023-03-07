@@ -156,7 +156,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *            server connection
      */
     private final void bridgeConnections(final Connection serverConn) {
-        // Connect to client, and wait for connection to be available
+        // Connect to client, and react when connection becomes available
         connectToClient().subscribe((clientConn) -> {
             final Disposable bridgeDispose;
 
