@@ -46,9 +46,9 @@ import reactor.netty.tcp.TcpServer;
  * <h2>Connection bridging</h2>
  * <p>
  * When the server starts a new connection, then a new client is started for said server connection. They are connected
- * through a {@link BidirectionalConnectionBridge}, which will redirect request and response streams
- * between them. So requests go this way: {@code listened port -> Netty server -> Netty client -> proxied URL}, and
- * responses work in reverse.
+ * through a {@link BidirectionalConnectionBridge}, which will redirect request and response streams between them. So
+ * requests go this way: {@code listened port -> Netty server -> Netty client -> proxied URL}, and responses work in
+ * reverse.
  * <p>
  * This also means than for each proxy server there may exist multiple clients. As many as current requests.
  *

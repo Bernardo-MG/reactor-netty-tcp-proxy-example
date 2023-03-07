@@ -81,32 +81,19 @@ public final class ResponseConnectionBridge implements ConnectionBridge {
                 final Publisher<byte[]> dataStream;
 
                 // Sends message to the listener
-                listener.onClientReceive(next);
+                listener.onResponse(next);
 
                 if (serverConn.isDisposed()) {
                     log.error("Server connection already disposed");
                 }
 
-                dataStream = buildStream(next);
+                dataStream = Mono.just(next);
 
                 return serverConn.outbound()
                     .sendByteArray(dataStream);
             })
             // Subscribe to run
             .subscribe();
-    }
-
-    /**
-     * Builds a data stream for the received bytes.
-     *
-     * @param data
-     *            byte array for the stream
-     * @return data stream from the received bytes
-     */
-    private final Publisher<byte[]> buildStream(final byte[] data) {
-        return Mono.just(data)
-            .flux()
-            .doOnNext(listener::onServerSend);
     }
 
 }

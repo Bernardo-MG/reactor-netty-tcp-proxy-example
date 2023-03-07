@@ -68,26 +68,14 @@ public final class CliWriterProxyListener implements ProxyListener {
     }
 
     @Override
-    public final void onClientReceive(final Object message) {
-        writer.printf("Client received message: %s", message);
+    public final void onRequest(final Object message) {
+        writer.printf("Received request message: %s", message);
         writer.println();
     }
 
     @Override
-    public final void onClientSend(final Object message) {
-        writer.printf("Client sent message: %s", message);
-        writer.println();
-    }
-
-    @Override
-    public final void onServerReceive(final Object message) {
-        writer.printf("Server received message: %s", message);
-        writer.println();
-    }
-
-    @Override
-    public final void onServerSend(final Object message) {
-        writer.printf("Server sent message: %s", message);
+    public final void onResponse(final Object message) {
+        writer.printf("Received response message: %s", message);
         writer.println();
     }
 
