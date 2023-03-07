@@ -77,7 +77,8 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
         respDispose = decoratedBridge(client.inbound(), server.outbound(), this::listenToResponse);
 
         // Combines disposables
-        return Disposables.composite(reqDispose, respDispose);
+        // This includes closing the client channel
+        return Disposables.composite(reqDispose, respDispose, client.channel()::close);
     }
 
     /**
