@@ -14,6 +14,8 @@ Inside the proxy server contains an instance of the proxy client, ReactorNettyPr
 
 The third main component is for the bridge, as ProxyConnectionBridge. This will take two connections, one being the client connection to the proxy server, and the other the proxy client connection to the real server. Both will be connected to redirect messages between them.
 
+The proxy listener is just for the CLI, to print messages based on what is going on in the proxy.
+
 ![Proxy class structure](./images/proxy_global_classes.drawio.png)
 
 ### Flow and instances
