@@ -34,7 +34,8 @@ import reactor.netty.Connection;
 import reactor.netty.tcp.TcpClient;
 
 /**
- * Client for the proxy. This attempts to connect to the target, and returns a connection when it manages to connect.
+ * Client for the proxy. This can create as many connections to the target server as needed. These are created
+ * asynchronously, and returned inside a {@code Mono}.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
@@ -75,7 +76,7 @@ public final class ReactorNettyProxyClient implements Client {
     }
 
     @Override
-    public Mono<? extends Connection> connect() {
+    public final Mono<? extends Connection> connect() {
         log.trace("Starting proxy client");
 
         log.debug("Connecting to {}:{}", host, port);

@@ -26,13 +26,11 @@ package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 
-import com.bernardomg.example.netty.proxy.client.Client;
 import com.bernardomg.example.netty.proxy.client.ReactorNettyProxyClient;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ProxyConnectionBridge;
 
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import reactor.netty.Connection;
 import reactor.netty.DisposableChannel;
@@ -58,60 +56,54 @@ public final class ReactorNettyTcpProxyServer implements Server {
     /**
      * Connection bridge to connect the proxy server and clients.
      */
-    private final ConnectionBridge bridge;
+    private final ConnectionBridge        bridge;
+
+    /**
+     * Proxy client. Creates new connections to the target as needed.
+     */
+    private final ReactorNettyProxyClient client;
 
     /**
      * Proxy listener. Extension hook which allows reacting to the proxy events.
      */
-    private final ProxyListener    listener;
+    private final ProxyListener           listener;
 
     /**
      * Port which the server will listen to.
      */
-    private final Integer          port;
+    private final Integer                 port;
 
     /**
      * Disposable for closing the server port connection.
      */
-    private DisposableChannel      server;
-
-    /**
-     * Host to which the proxy will connect.
-     */
-    private final String           targetHost;
-
-    /**
-     * Port to which the proxy will connect.
-     */
-    private final Integer          targetPort;
+    private DisposableChannel             server;
 
     /**
      * Wiretap flag. Activates Reactor Netty wiretap logging.
      */
-    @Setter
     @NonNull
-    private Boolean                wiretap = false;
+    private Boolean                       wiretap = false;
 
     /**
      * Constructs a proxy server redirecting the received port to the target URL.
      *
      * @param prt
      *            port to listen to
-     * @param trgtHost
+     * @param targetHost
      *            target host
-     * @param trgtPort
+     * @param targetPort
      *            target port
      * @param lst
      *            proxy listener
      */
-    public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
+    public ReactorNettyTcpProxyServer(final Integer prt, final String targetHost, final Integer targetPort,
             final ProxyListener lst) {
         super();
 
         port = Objects.requireNonNull(prt);
-        targetHost = Objects.requireNonNull(trgtHost);
-        targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
+
+        client = new ReactorNettyProxyClient(targetHost, targetPort);
 
         bridge = new ProxyConnectionBridge(listener);
     }
@@ -124,6 +116,12 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .block();
 
         log.trace("Stopped server listening");
+    }
+
+    public final void setWiretap(final Boolean flag) {
+        wiretap = flag;
+
+        client.setWiretap(wiretap);
     }
 
     @Override
@@ -166,11 +164,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *            server connection
      */
     private final void bridgeConnections(final Connection serverConn) {
-        final Client client;
-
         log.debug("Starting proxy client");
-
-        client = new ReactorNettyProxyClient(targetHost, targetPort);
 
         // Connect to client, and react when connection becomes available
         client.connect()
