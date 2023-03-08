@@ -61,6 +61,11 @@ public final class ReactorNettyTcpProxyServer implements Server {
     private final ConnectionBridge bridge;
 
     /**
+     * Proxy client. Creates new connections to the target as needed.
+     */
+    private final Client           client;
+
+    /**
      * Proxy listener. Extension hook which allows reacting to the proxy events.
      */
     private final ProxyListener    listener;
@@ -76,16 +81,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
     private DisposableChannel      server;
 
     /**
-     * Host to which the proxy will connect.
-     */
-    private final String           targetHost;
-
-    /**
-     * Port to which the proxy will connect.
-     */
-    private final Integer          targetPort;
-
-    /**
      * Wiretap flag. Activates Reactor Netty wiretap logging.
      */
     @Setter
@@ -97,21 +92,21 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *
      * @param prt
      *            port to listen to
-     * @param trgtHost
+     * @param targetHost
      *            target host
-     * @param trgtPort
+     * @param targetPort
      *            target port
      * @param lst
      *            proxy listener
      */
-    public ReactorNettyTcpProxyServer(final Integer prt, final String trgtHost, final Integer trgtPort,
+    public ReactorNettyTcpProxyServer(final Integer prt, final String targetHost, final Integer targetPort,
             final ProxyListener lst) {
         super();
 
         port = Objects.requireNonNull(prt);
-        targetHost = Objects.requireNonNull(trgtHost);
-        targetPort = Objects.requireNonNull(trgtPort);
         listener = Objects.requireNonNull(lst);
+
+        client = new ReactorNettyProxyClient(targetHost, targetPort);
 
         bridge = new ProxyConnectionBridge(listener);
     }
@@ -166,11 +161,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *            server connection
      */
     private final void bridgeConnections(final Connection serverConn) {
-        final Client client;
-
         log.debug("Starting proxy client");
-
-        client = new ReactorNettyProxyClient(targetHost, targetPort);
 
         // Connect to client, and react when connection becomes available
         client.connect()

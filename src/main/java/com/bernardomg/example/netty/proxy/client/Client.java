@@ -36,7 +36,8 @@ import reactor.netty.Connection;
 public interface Client {
 
     /**
-     * Connect. The returned {@code Mono} allows reacting asynchronously when the connection is made.
+     * Create and return a new connection. Said connection will come in a {@code Mono}, to allow subscribing
+     * asynchronously.
      *
      * @return a {@code Mono} for the client connection
      */
