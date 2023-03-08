@@ -26,17 +26,16 @@ package com.bernardomg.example.netty.proxy.server;
 
 import java.util.Objects;
 
+import com.bernardomg.example.netty.proxy.client.Client;
+import com.bernardomg.example.netty.proxy.client.ReactorNettyProxyClient;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ProxyConnectionBridge;
 
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.Disposable;
-import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.DisposableChannel;
-import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
 /**
@@ -167,36 +166,19 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *            server connection
      */
     private final void bridgeConnections(final Connection serverConn) {
+        final Client client;
+
+        log.debug("Starting proxy client");
+
+        client = new ReactorNettyProxyClient(targetHost, targetPort);
+
         // Connect to client, and react when connection becomes available
-        startClient().subscribe((clientConn) -> {
-            final Disposable bridgeDispose;
+        client.connect()
+            .subscribe((clientConn) -> {
+                log.debug("Bridging connection with {}", bridge);
 
-            log.debug("Bridging connection with {}", bridge);
-
-            bridgeDispose = bridge.bridge(serverConn, clientConn);
-
-            // When the server connection is disposed, so is the bridging
-            serverConn.onDispose(bridgeDispose);
-        });
-    }
-
-    /**
-     * Starts a client instance to the target URL, and returns a {@code Mono} to watch for the connection.
-     *
-     * @return {@code Mono} for the client connection
-     */
-    private final Mono<? extends Connection> startClient() {
-        log.trace("Starting proxy client");
-
-        log.debug("Proxy client connecting to {}:{}", targetHost, targetPort);
-
-        return TcpClient.create()
-            // Wiretap
-            .wiretap(wiretap)
-            // Connect to target
-            .host(targetHost)
-            .port(targetPort)
-            .connect();
+                bridge.bridge(serverConn, clientConn);
+            });
     }
 
 }

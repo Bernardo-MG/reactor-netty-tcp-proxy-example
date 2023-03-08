@@ -22,26 +22,24 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.proxy.server.bridge;
+package com.bernardomg.example.netty.proxy.client;
 
+import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 
 /**
- * Connection bridge. Redirects connections between the server and a client.
+ * Simple client which just attempts to connect, returning a mono for listening for the actual connection event.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-public interface ConnectionBridge {
+public interface Client {
 
     /**
-     * Bridges both connections.
+     * Connect. The returned {@code Mono} allows reacting asynchronously when the connection is made.
      *
-     * @param server
-     *            server connection
-     * @param client
-     *            client connection
+     * @return a {@code Mono} for the client connection
      */
-    public void bridge(final Connection server, final Connection client);
+    public Mono<? extends Connection> connect();
 
 }
