@@ -37,6 +37,7 @@
       </menu>
       <menu name="Documentation" inherit="bottom">
          <item name="Usage" href="./usage.html" />
+         <item name="Proxy Structure" href="./proxy_structure.html" />
       </menu>
       <menu name="Info and reports" inherit="bottom">
          <item name="Info" href="./info.html" />

@@ -121,7 +121,7 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
         decorated = decorator.apply(flux);
 
         return decorated
-            // proxy
+            // Redirect
             .concatMap(next -> outbound.sendByteArray(Mono.just(next)))
             // Subscribe to run
             .subscribe();
