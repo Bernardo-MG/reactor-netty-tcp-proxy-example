@@ -20,6 +20,6 @@ The proxy listener is just for the CLI, to print messages based on what is going
 
 ### Flow and instances
 
-![Connection Bridging Flow](./images/proxy_business.drawio.png)
+![Proxy flow](./images/flow_diagram.drawio.png)
 
 ## With Reactor
