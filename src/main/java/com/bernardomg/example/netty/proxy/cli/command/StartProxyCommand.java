@@ -44,7 +44,7 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
 /**
- * Start TCP proxy command.
+ * Start server command.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
@@ -121,8 +121,15 @@ public final class StartProxyCommand implements Runnable {
         proxy = new ReactorNettyTcpProxyServer(port, targetHost, targetPort, listener);
         proxy.setWiretap(debug);
 
-        // close server
+        // Start server
         proxy.start();
+        proxy.listen();
+
+        // Stop server
+        proxy.stop();
+
+        // Close writer
+        writer.close();
     }
 
     /**

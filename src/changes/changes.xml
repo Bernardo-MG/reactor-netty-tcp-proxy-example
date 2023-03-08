@@ -26,5 +26,19 @@
                 Cleaned up code.
             </action>
         </release>
+        <release version="1.0.3" date="2023-03-08" description="Documentation">
+            <action dev="bmg" type="add">
+                Added documentation.
+            </action>
+            <action dev="bmg" type="update">
+                Listener handles only requests and responses.
+            </action>
+            <action dev="bmg" type="fix">
+                Correctly closes client connections.
+            </action>
+            <action dev="bmg" type="update">
+                Cleaned up code.
+            </action>
+        </release>
     </body>
 </document>

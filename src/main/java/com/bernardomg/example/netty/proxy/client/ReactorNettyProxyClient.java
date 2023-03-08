@@ -22,72 +22,72 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.proxy.cli;
+package com.bernardomg.example.netty.proxy.client;
 
-import java.io.PrintWriter;
 import java.util.Objects;
 
-import com.bernardomg.example.netty.proxy.server.ProxyListener;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
+import reactor.netty.Connection;
+import reactor.netty.tcp.TcpClient;
 
 /**
- * Proxy listener which will write the context of each step into the CLI console.
+ * Client for the proxy. This can create as many connections to the target server as needed. These are created
+ * asynchronously, and returned inside a {@code Mono}.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-public final class CliWriterProxyListener implements ProxyListener {
-
-    /**
-     * Port which the proxy will listen to.
-     */
-    private final Integer     port;
+@Slf4j
+public final class ReactorNettyProxyClient implements Client {
 
     /**
      * Host to which the proxy will connect.
      */
-    private final String      targetHost;
+    private final String  host;
 
     /**
      * Port to which the proxy will connect.
      */
-    private final Integer     targetPort;
+    private final Integer port;
 
     /**
-     * CLI writer, to print console messages.
+     * Wiretap flag. Activates Reactor Netty wiretap logging.
      */
-    private final PrintWriter writer;
+    @Setter
+    @NonNull
+    private Boolean       wiretap = false;
 
-    public CliWriterProxyListener(final Integer prt, final String trgtHost, final Integer trgtPort,
-            final PrintWriter writ) {
+    /**
+     * Constructs a client for the received host and port.
+     *
+     * @param hst
+     *            host to connect to
+     * @param prt
+     *            port to connect to
+     */
+    public ReactorNettyProxyClient(final String hst, final Integer prt) {
         super();
 
+        host = Objects.requireNonNull(hst);
         port = Objects.requireNonNull(prt);
-        targetHost = Objects.requireNonNull(trgtHost);
-        targetPort = Objects.requireNonNull(trgtPort);
-        writer = Objects.requireNonNull(writ);
     }
 
     @Override
-    public final void onRequest(final byte[] message) {
-        writer.printf("Received request message: %s", new String(message));
-        writer.println();
-    }
+    public final Mono<? extends Connection> connect() {
+        log.trace("Starting proxy client");
 
-    @Override
-    public final void onResponse(final byte[] message) {
-        writer.printf("Received response message: %s", new String(message));
-        writer.println();
-    }
+        log.debug("Connecting to {}:{}", host, port);
 
-    @Override
-    public final void onStart() {
-        writer.printf("Redirecting port %d to %s:%d", port, targetHost, targetPort);
-        writer.println();
-    }
-
-    @Override
-    public final void onStop() {
-        writer.println("Stopping connection");
+        return TcpClient.create()
+            // Wiretap
+            .wiretap(wiretap)
+            // Connect to target
+            .host(host)
+            .port(port)
+            .connect();
     }
 
 }

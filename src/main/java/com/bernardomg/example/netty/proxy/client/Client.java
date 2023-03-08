@@ -22,29 +22,25 @@
  * SOFTWARE.
  */
 
-package com.bernardomg.example.netty.proxy.server;
+package com.bernardomg.example.netty.proxy.client;
+
+import reactor.core.publisher.Mono;
+import reactor.netty.Connection;
 
 /**
- * Generic server. Supports starting and stopping it.
+ * Simple client which just attempts to connect, returning a mono for listening for the actual connection event.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
  */
-public interface Server {
+public interface Client {
 
     /**
-     * Keeps the server waiting for requests.
+     * Create and return a new connection. Said connection will come in a {@code Mono}, to allow subscribing
+     * asynchronously.
+     *
+     * @return a {@code Mono} for the client connection
      */
-    public void listen();
-
-    /**
-     * Starts the server.
-     */
-    public void start();
-
-    /**
-     * Stops the server.
-     */
-    public void stop();
+    public Mono<? extends Connection> connect();
 
 }

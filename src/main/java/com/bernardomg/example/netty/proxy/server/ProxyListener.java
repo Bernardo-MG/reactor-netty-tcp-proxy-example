@@ -25,7 +25,7 @@
 package com.bernardomg.example.netty.proxy.server;
 
 /**
- * Transaction listener. Allows reacting to the events of a message transaction.
+ * Proxy transaction listener. Allows reacting to the events of a proxied connection.
  *
  * @author Bernardo Mart&iacute;nez Garrido
  *
@@ -33,36 +33,20 @@ package com.bernardomg.example.netty.proxy.server;
 public interface ProxyListener {
 
     /**
-     * Reacts to a message being received.
+     * Reacts to a request message being received.
      *
      * @param message
      *            message received
      */
-    public void onClientReceive(final Object message);
+    public void onRequest(final byte[] message);
 
     /**
-     * Reacts to a message being sent.
+     * Reacts to a response message being received.
      *
      * @param message
      *            message sent
      */
-    public void onClientSend(final Object message);
-
-    /**
-     * Reacts to a message being received.
-     *
-     * @param message
-     *            message received
-     */
-    public void onServerReceive(final Object message);
-
-    /**
-     * Reacts to a message being sent.
-     *
-     * @param message
-     *            message sent
-     */
-    public void onServerSend(final Object message);
+    public void onResponse(final byte[] message);
 
     /**
      * Reacts to the start event.
