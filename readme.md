@@ -86,10 +86,10 @@ If you wish to fork or modify the code, visit the [GitHub project page][scm], wh
 
 The project has been released under the [MIT License][license].
 
-[issues]: https://github.com/bernardo-mg/netty-tcp-client-example/issues
-[javadoc-develop]: https://docs.bernardomg.com/development/maven/netty-tcp-client-example/apidocs
-[javadoc-release]: https://docs.bernardomg.com/maven/netty-tcp-client-example/apidocs
+[issues]: https://github.com/bernardo-mg/reactor-netty-tcp-proxy-example/issues
+[javadoc-develop]: https://docs.bernardomg.com/development/maven/reactor-netty-tcp-proxy-example/apidocs
+[javadoc-release]: https://docs.bernardomg.com/maven/reactor-netty-tcp-proxy-example/apidocs
 [license]: https://www.opensource.org/licenses/mit-license.php
-[scm]: https://github.com/bernardo-mg/netty-tcp-client-example
-[site-develop]: https://docs.bernardomg.com/development/maven/netty-tcp-client-example
-[site-release]: https://docs.bernardomg.com/maven/netty-tcp-client-example
+[scm]: https://github.com/bernardo-mg/reactor-netty-tcp-proxy-example
+[site-develop]: https://docs.bernardomg.com/development/maven/reactor-netty-tcp-proxy-example
+[site-release]: https://docs.bernardomg.com/maven/reactor-netty-tcp-proxy-example
