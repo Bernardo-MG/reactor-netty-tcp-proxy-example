@@ -12,14 +12,14 @@ In the implementation the proxy revolves around ReactorNettyTcpProxyServer, whic
 
 Inside the proxy server contains an instance of the proxy client, ReactorNettyProxyClient. This can create new connections to the real server as needed.
 
-The third main component is for the bridge, as ProxyConnectionBridge. This will take two connections, one being the client connection to the proxy server, and the other the proxy client connection to the real server. Both will be connected to redirect messages between them.
+The third main component is for the bridge, ProxyConnectionBridge. This will take two connections, one being the client connection to the proxy server, and the other the proxy client connection to the real server. Both will be connected to redirect messages between them.
 
 The proxy listener is just for the CLI, to print messages based on what is going on in the proxy.
 
 ![Proxy class structure](./images/proxy_global_classes.drawio.png)
 
-### Flow and instances
+### Connections
 
-![Proxy flow](./images/flow_diagram.drawio.png)
+Once the proxy server is started it keeps listening for new connections until stopped. Each connection will start the proxying loop, which also starts a proxy client connection, bridges them and then keeps handling messages for as long as the connection is open.
 
-## With Reactor
+![Connection loop](./images/flow_diagram.drawio.png)
