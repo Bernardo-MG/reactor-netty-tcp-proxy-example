@@ -40,7 +40,6 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Help;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
 /**
@@ -62,7 +61,8 @@ public final class StartProxyCommand implements Runnable {
     /**
      * Server port.
      */
-    @Parameters(index = "0", description = "Proxy server port", paramLabel = "PORT")
+    @Option(names = { "-p", "--port" }, paramLabel = "port", description = "Proxy server port to listen.",
+            required = true)
     private Integer     port;
 
     /**
@@ -74,13 +74,13 @@ public final class StartProxyCommand implements Runnable {
     /**
      * Target host.
      */
-    @Parameters(index = "1", description = "Target host", paramLabel = "TARGET-HOST")
+    @Option(names = { "-th", "--targetHost" }, paramLabel = "targetHost", description = "Target host.", required = true)
     private String      targetHost;
 
     /**
      * Target port.
      */
-    @Parameters(index = "2", description = "Target port", paramLabel = "TARGET-PORT")
+    @Option(names = { "-tp", "--targetPort" }, paramLabel = "targetPort", description = "Target port.", required = true)
     private Integer     targetPort;
 
     /**
