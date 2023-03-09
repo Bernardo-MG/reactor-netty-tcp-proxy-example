@@ -40,5 +40,10 @@
                 Cleaned up code.
             </action>
         </release>
+        <release version="1.0.4" date="2023-03-09" description="Options on commands">
+            <action dev="bmg" type="update">
+                Using options for setting up commands.
+            </action>
+        </release>
     </body>
 </document>
