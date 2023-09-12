@@ -45,5 +45,10 @@
                 Using options for setting up commands.
             </action>
         </release>
+        <release version="1.0.5" date="2023-09-12" description="Simplified bridging">
+            <action dev="bmg" type="update">
+                Simplified bridging.
+            </action>
+        </release>
     </body>
 </document>

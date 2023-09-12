@@ -25,9 +25,12 @@
 package com.bernardomg.example.netty.proxy.cli;
 
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.Objects;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
+
+import io.netty.buffer.ByteBuf;
 
 /**
  * Proxy listener which will write the context of each step into the CLI console.
@@ -68,14 +71,14 @@ public final class CliWriterProxyListener implements ProxyListener {
     }
 
     @Override
-    public final void onRequest(final byte[] message) {
-        writer.printf("Received request message: %s", new String(message));
+    public final void onRequest(final ByteBuf message) {
+        writer.printf("Received request message: %s", message.toString(Charset.defaultCharset()));
         writer.println();
     }
 
     @Override
-    public final void onResponse(final byte[] message) {
-        writer.printf("Received response message: %s", new String(message));
+    public final void onResponse(final ByteBuf message) {
+        writer.printf("Received response message: %s", message.toString(Charset.defaultCharset()));
         writer.println();
     }
 

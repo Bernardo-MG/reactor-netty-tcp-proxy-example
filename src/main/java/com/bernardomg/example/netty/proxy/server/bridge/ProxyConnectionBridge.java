@@ -25,15 +25,14 @@
 package com.bernardomg.example.netty.proxy.server.bridge;
 
 import java.util.Objects;
-import java.util.function.UnaryOperator;
+import java.util.function.Consumer;
 
 import com.bernardomg.example.netty.proxy.server.ProxyListener;
 
+import io.netty.buffer.ByteBuf;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.NettyInbound;
 import reactor.netty.NettyOutbound;
@@ -81,10 +80,10 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
         final Disposable bridgeDispose;
 
         log.debug("Binding request. Server inbound -> client outbound");
-        reqDispose = decoratedBridge(server.inbound(), client.outbound(), this::listenToRequest);
+        reqDispose = decoratedBridge(server.inbound(), client.outbound(), listener::onRequest);
 
         log.debug("Binding response. Client inbound -> server outbound");
-        respDispose = decoratedBridge(client.inbound(), server.outbound(), this::listenToResponse);
+        respDispose = decoratedBridge(client.inbound(), server.outbound(), listener::onResponse);
 
         // Combines disposables
         // This includes closing the client channel
@@ -107,46 +106,12 @@ public final class ProxyConnectionBridge implements ConnectionBridge {
      * @return disposable to get rid of the bridge flux
      */
     private final Disposable decoratedBridge(final NettyInbound inbound, final NettyOutbound outbound,
-            final UnaryOperator<Flux<byte[]>> decorator) {
-        final Flux<byte[]> flux;
-        final Flux<byte[]> decorated;
-
-        flux = inbound
-            // Receive
-            .receive()
-            // Transform to byte array
-            .asByteArray();
-
-        // Applies decorator
-        decorated = decorator.apply(flux);
-
-        return decorated
-            // Redirect
-            .concatMap(next -> outbound.sendByteArray(Mono.just(next)))
-            // Subscribe to run
+            final Consumer<? super ByteBuf> decorator) {
+        return outbound.send(inbound.receive()
+            .retain()
+            .doOnNext(decorator))
+            .then()
             .subscribe();
-    }
-
-    /**
-     * Decorates the flux by adding the listener, which will react to requests.
-     *
-     * @param flux
-     *            flux to decorate
-     * @return the decorated flux
-     */
-    private final Flux<byte[]> listenToRequest(final Flux<byte[]> flux) {
-        return flux.doOnNext(listener::onRequest);
-    }
-
-    /**
-     * Decorates the flux by adding the listener, which will react to responses.
-     *
-     * @param flux
-     *            flux to decorate
-     * @return the decorated flux
-     */
-    private final Flux<byte[]> listenToResponse(final Flux<byte[]> flux) {
-        return flux.doOnNext(listener::onResponse);
     }
 
 }

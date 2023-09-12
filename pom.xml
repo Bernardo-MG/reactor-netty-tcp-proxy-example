@@ -19,7 +19,7 @@
 
    <groupId>com.bernardomg.example</groupId>
    <artifactId>reactor-netty-tcp-proxy-example</artifactId>
-   <version>1.0.4</version>
+   <version>1.0.5</version>
    <packaging>jar</packaging>
 
    <name>Reactor Netty TCP Proxy Example</name>
@@ -137,10 +137,6 @@
       <!-- ================= MAVEN SITE ================= -->
       <!-- ============================================== -->
       <site.skin.version>2.3.1</site.skin.version>
-      <mavenURL>https://mvnrepository.com/artifact/${project.groupId}/${project.artifactId}</mavenURL>
-      <githubArtifactURL>
-         <![CDATA[https://github.com/bernardo-mg?tab=packages&amp;repo_name={project.artifactId}]]>
-      </githubArtifactURL>
       <!-- ============================================== -->
       <!-- ================= EXECUTABLE ================= -->
       <!-- ============================================== -->
@@ -276,7 +272,7 @@
    <!-- ********************************************** -->
 
    <build>
-      <defaultGoal>clean package install</defaultGoal>
+      <defaultGoal>clean package</defaultGoal>
       <pluginManagement>
          <plugins>
             <plugin>
