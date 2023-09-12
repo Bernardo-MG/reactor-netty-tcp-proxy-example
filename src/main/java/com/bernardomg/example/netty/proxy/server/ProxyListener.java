@@ -24,6 +24,8 @@
 
 package com.bernardomg.example.netty.proxy.server;
 
+import io.netty.buffer.ByteBuf;
+
 /**
  * Proxy transaction listener. Allows reacting to the events of a proxied connection.
  *
@@ -38,7 +40,7 @@ public interface ProxyListener {
      * @param message
      *            message received
      */
-    public void onRequest(final byte[] message);
+    public void onRequest(final ByteBuf message);
 
     /**
      * Reacts to a response message being received.
@@ -46,7 +48,7 @@ public interface ProxyListener {
      * @param message
      *            message sent
      */
-    public void onResponse(final byte[] message);
+    public void onResponse(final ByteBuf message);
 
     /**
      * Reacts to the start event.
