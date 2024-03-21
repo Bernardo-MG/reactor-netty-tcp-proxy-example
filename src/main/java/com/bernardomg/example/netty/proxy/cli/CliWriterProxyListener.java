@@ -72,14 +72,22 @@ public final class CliWriterProxyListener implements ProxyListener {
 
     @Override
     public final void onRequest(final ByteBuf message) {
-        writer.printf("Received request message: %s", message.toString(Charset.defaultCharset()));
+        printHorizontalLine("RECEIVED REQUEST TO REDIRECT - START");
+
+        writer.printf("Received request to redirect from client: %s", message.toString(Charset.defaultCharset()));
         writer.println();
+
+        printHorizontalLine("RECEIVED REQUEST TO REDIRECT - END");
     }
 
     @Override
     public final void onResponse(final ByteBuf message) {
-        writer.printf("Received response message: %s", message.toString(Charset.defaultCharset()));
+        printHorizontalLine("SENT PROXIED RESPONSE - START");
+
+        writer.printf("Sent back response from proxied server: %s", message.toString(Charset.defaultCharset()));
         writer.println();
+
+        printHorizontalLine("SENT PROXIED RESPONSE - END");
     }
 
     @Override
@@ -91,6 +99,18 @@ public final class CliWriterProxyListener implements ProxyListener {
     @Override
     public final void onStop() {
         writer.println("Stopping connection");
+    }
+
+    /**
+     * Prints a horizontal line with the received header in the middle.
+     *
+     * @param header
+     *            header to print in the line
+     */
+    private final void printHorizontalLine(final String header) {
+        writer.println();
+        writer.println(String.format("-------------------- %s --------------------", header));
+        writer.println();
     }
 
 }
