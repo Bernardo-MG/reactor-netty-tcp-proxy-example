@@ -30,7 +30,6 @@ import com.bernardomg.example.netty.proxy.client.ReactorNettyProxyClient;
 import com.bernardomg.example.netty.proxy.server.bridge.ConnectionBridge;
 import com.bernardomg.example.netty.proxy.server.bridge.ProxyConnectionBridge;
 
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import reactor.netty.Connection;
 import reactor.netty.DisposableChannel;
@@ -81,8 +80,7 @@ public final class ReactorNettyTcpProxyServer implements Server {
     /**
      * Wiretap flag. Activates Reactor Netty wiretap logging.
      */
-    @NonNull
-    private Boolean                       wiretap = false;
+    private final boolean                 wiretap;
 
     /**
      * Constructs a proxy server redirecting the received port to the target URL.
@@ -95,15 +93,18 @@ public final class ReactorNettyTcpProxyServer implements Server {
      *            target port
      * @param lst
      *            proxy listener
+     * @param wtap
+     *            wiretap flag
      */
     public ReactorNettyTcpProxyServer(final Integer prt, final String targetHost, final Integer targetPort,
-            final ProxyListener lst) {
+            final ProxyListener lst, final boolean wtap) {
         super();
 
         port = Objects.requireNonNull(prt);
         listener = Objects.requireNonNull(lst);
+        wiretap = Objects.requireNonNull(wtap);
 
-        client = new ReactorNettyProxyClient(targetHost, targetPort);
+        client = new ReactorNettyProxyClient(targetHost, targetPort, wtap);
 
         bridge = new ProxyConnectionBridge(listener);
     }
@@ -116,12 +117,6 @@ public final class ReactorNettyTcpProxyServer implements Server {
             .block();
 
         log.trace("Stopped server listening");
-    }
-
-    public final void setWiretap(final Boolean flag) {
-        wiretap = flag;
-
-        client.setWiretap(wiretap);
     }
 
     @Override
