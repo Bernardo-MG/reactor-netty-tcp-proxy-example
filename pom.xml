@@ -10,7 +10,7 @@
    <parent>
       <groupId>com.bernardomg.maven</groupId>
       <artifactId>base-pom</artifactId>
-      <version>1.5.3</version>
+      <version>1.5.4</version>
    </parent>
 
    <!-- ********************************************** -->
@@ -19,7 +19,7 @@
 
    <groupId>com.bernardomg.example</groupId>
    <artifactId>reactor-netty-tcp-proxy-example</artifactId>
-   <version>1.0.5</version>
+   <version>1.0.6</version>
    <packaging>jar</packaging>
 
    <name>Reactor Netty TCP Proxy Example</name>
@@ -118,16 +118,16 @@
       <!-- =========== DEPENDENCIES VERSIONS ============ -->
       <!-- ============================================== -->
       <bernardomg.cli.manifestVersion>1.0.0</bernardomg.cli.manifestVersion>
-      <junit.jupiter.version>5.9.2</junit.jupiter.version>
-      <log4j.version>2.19.0</log4j.version>
-      <lombok.version>1.18.26</lombok.version>
-      <picocli.version>4.7.1</picocli.version>
-      <reactor.version>2022.0.3</reactor.version>
-      <slf4j.version>2.0.6</slf4j.version>
+      <junit.jupiter.version>5.10.2</junit.jupiter.version>
+      <log4j.version>2.23.1</log4j.version>
+      <lombok.version>1.18.32</lombok.version>
+      <picocli.version>4.7.5</picocli.version>
+      <reactor.version>2023.0.4</reactor.version>
+      <slf4j.version>2.0.12</slf4j.version>
       <!-- ============================================== -->
       <!-- ============== PLUGINS VERSIONS ============== -->
       <!-- ============================================== -->
-      <plugin.shade.version>3.4.1</plugin.shade.version>
+      <plugin.shade.version>3.5.2</plugin.shade.version>
       <!-- ============================================== -->
       <!-- ============ PLUGIN CONFIGURATION ============ -->
       <!-- ============================================== -->
@@ -136,7 +136,7 @@
       <!-- ============================================== -->
       <!-- ================= MAVEN SITE ================= -->
       <!-- ============================================== -->
-      <site.skin.version>2.3.1</site.skin.version>
+      <site.skin.version>2.3.2</site.skin.version>
       <!-- ============================================== -->
       <!-- ================= EXECUTABLE ================= -->
       <!-- ============================================== -->

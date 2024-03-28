@@ -35,18 +35,18 @@ import io.netty.buffer.ByteBuf;
 public interface ProxyListener {
 
     /**
-     * Reacts to a request message being received.
+     * Reacts to a request message being received by the server from the client.
      *
      * @param message
-     *            message received
+     *            request message received
      */
     public void onRequest(final ByteBuf message);
 
     /**
-     * Reacts to a response message being received.
+     * Reacts to a response message being sent by the server to the client.
      *
      * @param message
-     *            message sent
+     *            response message sent
      */
     public void onResponse(final ByteBuf message);
 

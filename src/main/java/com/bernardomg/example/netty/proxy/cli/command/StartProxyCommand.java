@@ -118,8 +118,7 @@ public final class StartProxyCommand implements Runnable {
 
         // Create server
         listener = new CliWriterProxyListener(port, targetHost, targetPort, writer);
-        proxy = new ReactorNettyTcpProxyServer(port, targetHost, targetPort, listener);
-        proxy.setWiretap(debug);
+        proxy = new ReactorNettyTcpProxyServer(port, targetHost, targetPort, listener, debug);
 
         // Start server
         proxy.start();

@@ -26,8 +26,6 @@ package com.bernardomg.example.netty.proxy.client;
 
 import java.util.Objects;
 
-import lombok.NonNull;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
@@ -56,9 +54,7 @@ public final class ReactorNettyProxyClient implements Client {
     /**
      * Wiretap flag. Activates Reactor Netty wiretap logging.
      */
-    @Setter
-    @NonNull
-    private Boolean       wiretap = false;
+    private final boolean wiretap;
 
     /**
      * Constructs a client for the received host and port.
@@ -67,12 +63,15 @@ public final class ReactorNettyProxyClient implements Client {
      *            host to connect to
      * @param prt
      *            port to connect to
+     * @param wtap
+     *            wiretap flag
      */
-    public ReactorNettyProxyClient(final String hst, final Integer prt) {
+    public ReactorNettyProxyClient(final String hst, final Integer prt, final boolean wtap) {
         super();
 
         host = Objects.requireNonNull(hst);
         port = Objects.requireNonNull(prt);
+        wiretap = Objects.requireNonNull(wtap);
     }
 
     @Override
