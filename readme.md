@@ -40,10 +40,10 @@ java -jar target/proxy.jar -h
 - [Reactor Netty TCP Server Example](https://github.com/Bernardo-MG/reactor-netty-tcp-server-example)
 - [Reactor Netty TCP Proxy Example](https://github.com/Bernardo-MG/reactor-netty-tcp-proxy-example)
 
-### HTTP
+### HTTP Reactive
 
-- [Netty HTTP Client Example](https://github.com/Bernardo-MG/reactor-netty-http-client-example)
-- [Netty HTTP Server Example](https://github.com/Bernardo-MG/reactor-netty-http-server-example)
+- [Reactor Netty HTTP Client Example](https://github.com/Bernardo-MG/reactor-netty-http-client-example)
+- [Reactor Netty HTTP Server Example](https://github.com/Bernardo-MG/reactor-netty-http-server-example)
 
 ## Features
 
