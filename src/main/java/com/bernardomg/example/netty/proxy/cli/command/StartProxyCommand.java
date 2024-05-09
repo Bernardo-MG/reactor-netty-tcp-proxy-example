@@ -56,7 +56,7 @@ public final class StartProxyCommand implements Runnable {
      * Debug flag. Shows debug logs.
      */
     @Option(names = { "--debug" }, paramLabel = "flag", description = "Enable debug logs.", defaultValue = "false")
-    private Boolean     debug;
+    private boolean     debug;
 
     /**
      * Server port.
@@ -88,7 +88,7 @@ public final class StartProxyCommand implements Runnable {
      */
     @Option(names = { "--verbose" }, paramLabel = "flag", description = "Print information to console.",
             defaultValue = "true", showDefaultValue = Help.Visibility.ALWAYS)
-    private Boolean     verbose;
+    private boolean     verbose;
 
     /**
      * Default constructor.
