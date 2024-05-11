@@ -50,7 +50,13 @@
                 Simplified bridging.
             </action>
         </release>
-        <release version="1.1.0" date="2023-09-12" description="">
+        <release version="1.0.6" date="2023-09-12" description="Updated dependencies">
+            <action dev="bmg" type="update">
+                Updated dependencies.
+            </action>
+            <action dev="bmg" type="update">
+                Cleaned up code.
+            </action>
         </release>
     </body>
 </document>
